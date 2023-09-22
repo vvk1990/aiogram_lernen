@@ -1,9 +1,10 @@
-from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, ReplyKeyboardRemove, InlineKeyboardMarkup, InlineKeyboardButton
+from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, ReplyKeyboardRemove, InlineKeyboardMarkup, \
+    InlineKeyboardButton
 
 
 # 🗓✏️📝🖌🖍📌🖇📎🧮🔎🔍🔄➡️⬅️⬆️⬇️↩️💬💭🗯🚮⚛️🆔
 # 🥖 🥐🥯🍞🥨🌭🍔🥪🍩🍪☎️💸🛒🗑💌👤📷
-# 🥖 🥐🥯🍞🥨🌭🍔🥪🍩🍪☎️💸🛒🗑💌👤📷📧✉️
+# 🥖 🥐🥯🍞🥨🌭🍔🥪🍩🍪☎️💸🛒🗑💌👤📷📧✉️🧹⚖️
 
 # КЛИЕНТСКАЯ
 ########################################################################################################################
@@ -11,25 +12,24 @@ from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, ReplyKeyboardRemo
 # РЕГИСТРАЦИЯ КЛИЕНТА
 def kb_reg():
     kb_reg = ReplyKeyboardMarkup(resize_keyboard=True)
-                             #)# создали клавиатуру,
+    # )# создали клавиатуру,
     # вписывающейся в интерфейс(resize_keyboard=True),
     # и самозакрывается (one_time_keyboard=True)
 
-    kb_reg.add(KeyboardButton('Зарегистрироваться'))# cоздали кнопку
+    kb_reg.add(KeyboardButton('Зарегистрироваться'))  # cоздали кнопку
 
     return kb_reg
 
 
 # ГЛАВНОЕ МЕНЮ
 def kb_menu():
-
     kb = ReplyKeyboardMarkup(resize_keyboard=True)
-                             #)# создали клавиатуру,
+    # )# создали клавиатуру,
     # вписывающейся в интерфейс(resize_keyboard=True),
     # и самозакрывается (one_time_keyboard=True)
 
-    #🥖 🥐🥯🍞🥨🌭🍔🥪🍩🍪☎️💸🛒🗑💌👤📷
-    kb.add(KeyboardButton('Сделать заявку 🍞 '))# cоздали кнопку
+    # 🥖 🥐🥯🍞🥨🌭🍔🥪🍩🍪☎️💸🛒🗑💌👤📷
+    kb.add(KeyboardButton('Сделать заявку 🍞 '))  # cоздали кнопку
     kb.add(KeyboardButton('Прайс-Яровое 🥨'), KeyboardButton('Прайс-Славгород 🍪'))
     kb.add(KeyboardButton('Прайс с Фото 📷 (Яровое, Славгород)'))
     kb.add(KeyboardButton('Контакты ☎️'), KeyboardButton('Вакансии 👤'))
@@ -39,7 +39,7 @@ def kb_menu():
 
 
 # Клиент - инлайн клавиатура +,-,= к заявке
-def get_iline_keyboard(ind_lis, result)->InlineKeyboardMarkup:
+def get_iline_keyboard(ind_lis, result) -> InlineKeyboardMarkup:
     ikb = InlineKeyboardMarkup(row_width=3, inline_keyboard=[
         [InlineKeyboardButton('-', callback_data=f'-{ind_lis}'),
          InlineKeyboardButton('+', callback_data=f'+{ind_lis}'),
@@ -51,7 +51,7 @@ def get_iline_keyboard(ind_lis, result)->InlineKeyboardMarkup:
 
 # Клиент - клавиатура с кнопками "назад(в меню клиента), корзина, подтвердить"
 def back_cart_confirm():
-    kb = ReplyKeyboardMarkup(resize_keyboard=True)# создали клавиатуру,
+    kb = ReplyKeyboardMarkup(resize_keyboard=True)  # создали клавиатуру,
 
     # вписывающейся в интерфейс(resize_keyboard=True),
     # и самозакрывается (one_time_keyboard=True)
@@ -62,24 +62,26 @@ def back_cart_confirm():
 
 
 # Клиент - инлайн кноки да, нет посмотреть старую заявку
-def get_iline_keyboard_yes_no_look()->InlineKeyboardMarkup:
+def get_iline_keyboard_yes_no_look() -> InlineKeyboardMarkup:
     ikb = InlineKeyboardMarkup(row_width=3, inline_keyboard=[
         [InlineKeyboardButton('Да', callback_data='!Да'),
          InlineKeyboardButton('Нет', callback_data='!Нет')],
-         [InlineKeyboardButton('Открыть старую заявку', callback_data='!Старая заявка')]
+        [InlineKeyboardButton('Открыть старую заявку', callback_data='!Старая заявка')]
     ])
 
     return ikb
 
 
 # Клиент - инлайн кноки да, нет на вопрос 'переписать заявку'
-def get_iline_keyboard_yes_no()->InlineKeyboardMarkup:
+def get_iline_keyboard_yes_no() -> InlineKeyboardMarkup:
     ikb = InlineKeyboardMarkup(row_width=3, inline_keyboard=[
         [InlineKeyboardButton('Да', callback_data='!Да'),
          InlineKeyboardButton('Нет', callback_data='!Нет')],
     ])
 
     return ikb
+
+
 ########################################################################################################################
 
 
@@ -88,13 +90,12 @@ def get_iline_keyboard_yes_no()->InlineKeyboardMarkup:
 
 # ГЛАВНОЕ МЕНЮ
 def kb_menu_admin():
-
     kb = ReplyKeyboardMarkup(resize_keyboard=True)
-                             #)# создали клавиатуру,
+    # )# создали клавиатуру,
     # вписывающейся в интерфейс(resize_keyboard=True),
     # и самозакрывается (one_time_keyboard=True)
 
-    #🥖 🥐🥯🍞🥨🌭🍔🥪🍩🍪☎️💸🛒🗑💌👤📷
+    # 🥖 🥐🥯🍞🥨🌭🍔🥪🍩🍪☎️💸🛒🗑💌👤📷
     kb.add(KeyboardButton('Заявки ✉️'))
     kb.add(KeyboardButton('Постоянные заявки 📧'))
     kb.add(KeyboardButton('Клиенты 👤'))
@@ -105,9 +106,8 @@ def kb_menu_admin():
 
 # ЗАЯВКИ
 def kb_menu_application_admin():
-
     kb = ReplyKeyboardMarkup(resize_keyboard=True)
-                             #)# создали клавиатуру,
+    # )# создали клавиатуру,
     # вписывающейся в интерфейс(resize_keyboard=True),
     # и самозакрывается (one_time_keyboard=True)
 
@@ -121,7 +121,7 @@ def kb_menu_application_admin():
 # Заявки - "назад(в меню админа), корзина, подтвердить"
 def back_cart_confirm_admin():
     # ✍️🗑‼️⁉️❗️🔙
-    kb = ReplyKeyboardMarkup(resize_keyboard=True)# создали клавиатуру,
+    kb = ReplyKeyboardMarkup(resize_keyboard=True)  # создали клавиатуру,
 
     # вписывающейся в интерфейс(resize_keyboard=True),
     # и самозакрывается (one_time_keyboard=True)
@@ -132,18 +132,18 @@ def back_cart_confirm_admin():
 
 
 # Заявки - да, нет посмотреть заявку для АДМИНА
-def get_inline_keyboard_yes_no_look_admin()->InlineKeyboardMarkup:
+def get_inline_keyboard_yes_no_look_admin() -> InlineKeyboardMarkup:
     ikb = InlineKeyboardMarkup(row_width=3, inline_keyboard=[
         [InlineKeyboardButton('Да', callback_data='?Да'),
          InlineKeyboardButton('Нет', callback_data='?Нет')],
-         [InlineKeyboardButton('Открыть старую заявку', callback_data='?Старая заявка')]
+        [InlineKeyboardButton('Открыть старую заявку', callback_data='?Старая заявка')]
     ])
 
     return ikb
 
 
 # Заявки - да, нет на вопрос 'переписать заявку' для АДМИНА
-def get_iline_keyboard_yes_no_admin()->InlineKeyboardMarkup:
+def get_iline_keyboard_yes_no_admin() -> InlineKeyboardMarkup:
     ikb = InlineKeyboardMarkup(row_width=3, inline_keyboard=[
         [InlineKeyboardButton('Да', callback_data='?Да'),
          InlineKeyboardButton('Нет', callback_data='?Нет')],
@@ -171,13 +171,13 @@ def kb_menu_constant_application_admin():
 def get_inline_keyboard_deys_of_week(action):
     ikb = InlineKeyboardMarkup(row_width=3,
                                inline_keyboard=[
-        [InlineKeyboardButton('Понедельник', callback_data=f'{action}Понедельник'),
-         InlineKeyboardButton('Вторник', callback_data=f'{action}Вторник')],
-        [InlineKeyboardButton('Среда', callback_data=f'{action}Среда'),
-         InlineKeyboardButton('Четверг', callback_data=f'{action}Четверг')],
-        [InlineKeyboardButton('Пятница', callback_data=f'{action}Пятница'),
-         InlineKeyboardButton('Суббота', callback_data=f'{action}Суббота')]
-    ])
+                                   [InlineKeyboardButton('Понедельник', callback_data=f'{action}Понедельник'),
+                                    InlineKeyboardButton('Вторник', callback_data=f'{action}Вторник')],
+                                   [InlineKeyboardButton('Среда', callback_data=f'{action}Среда'),
+                                    InlineKeyboardButton('Четверг', callback_data=f'{action}Четверг')],
+                                   [InlineKeyboardButton('Пятница', callback_data=f'{action}Пятница'),
+                                    InlineKeyboardButton('Суббота', callback_data=f'{action}Суббота')]
+                               ])
 
     return ikb
 
@@ -226,8 +226,83 @@ def kb_menu_brod_admin():
 
     # 🥖 🥐🥯🍞🥨🌭🍔🥪🍩🍪☎️💸🛒🗑💌👤📷
     kb.add(KeyboardButton('Добавить + 🍞'))
-    kb.add(KeyboardButton('Изменить 🍞'))
-    kb.add(KeyboardButton('Удалить - 🍞'))
+    kb.add(KeyboardButton('Изменить 🍞🔄🥖'))
+    kb.add(KeyboardButton('Удалить - 🗑'))
     kb.add(KeyboardButton('<< Назад'))
 
     return kb
+
+
+# # инлайн клавиатура для изменения данных хлеба
+# def get_inline_keyboard_brod_change(list_brod_change):
+#     ikb = InlineKeyboardMarkup(row_width=3,
+#                                inline_keyboard=[
+#                                    [InlineKeyboardButton('Имя:', callback_data=f'q'),
+#                                     InlineKeyboardButton(f'{list_brod_change[1]}', callback_data=f'q'),
+#                                     InlineKeyboardButton(f'Изменить имя', callback_data=f'Изменить имя')],
+#
+#                                    [InlineKeyboardButton('Вес:', callback_data=f'q'),
+#                                     InlineKeyboardButton(f'{list_brod_change[2]}', callback_data=f'q'),
+#                                     InlineKeyboardButton(f'Изменить вес', callback_data=f'Изменить вес')],
+#
+#                                    [InlineKeyboardButton('Цена Яровое:', callback_data=f'q'),
+#                                     InlineKeyboardButton(f'{list_brod_change[3]}', callback_data=f'q'),
+#                                     InlineKeyboardButton(f'Изменить цену', callback_data=f'Изменить цену Яровое')]
+#                                    ,
+#                                    [InlineKeyboardButton('Цена Славгород:', callback_data=f'q'),
+#                                     InlineKeyboardButton(f'{list_brod_change[4]}', callback_data=f'q'),
+#                                     InlineKeyboardButton(f'Изменить цену', callback_data=f'Изменить цену Славгород')],
+#                                ])
+#
+#     return ikb
+
+
+# инлайн клавиатура для изменения данных хлеба
+def get_inline_keyboard_brod_change(name, heft, price_jr, price_sl):
+    ikb = InlineKeyboardMarkup(row_width=3,
+                               inline_keyboard=[
+                                   [InlineKeyboardButton('Имя:', callback_data=f'q'),
+                                    InlineKeyboardButton(f'{name}', callback_data=f'q'),
+                                    InlineKeyboardButton(f'Изменить имя', callback_data=f'Изменить имя')],
+
+                                   [InlineKeyboardButton('Вес:', callback_data=f'q'),
+                                    InlineKeyboardButton(f'{heft}', callback_data=f'q'),
+                                    InlineKeyboardButton(f'Изменить вес', callback_data=f'Изменить вес')],
+
+                                   [InlineKeyboardButton('Цена Яровое:', callback_data=f'q'),
+                                    InlineKeyboardButton(f'{price_jr}', callback_data=f'q'),
+                                    InlineKeyboardButton(f'Изменить цену', callback_data=f'Изменить цену Яровое')]
+                                   ,
+                                   [InlineKeyboardButton('Цена Славгород:', callback_data=f'q'),
+                                    InlineKeyboardButton(f'{price_sl}', callback_data=f'q'),
+                                    InlineKeyboardButton(f'Изменить цену', callback_data=f'Изменить цену Славгород')],
+                               ])
+
+    return ikb
+
+
+def get_inline_keyboard_brod_change2(what, data):
+    ikb = InlineKeyboardMarkup(row_width=2,
+                               inline_keyboard=[
+                                   [InlineKeyboardButton(f'{what}:', callback_data=f'q'),
+                                    InlineKeyboardButton(f'{data}', callback_data=f'q')],
+
+                                   [InlineKeyboardButton(f'Изменить {what}', callback_data=f'Изменить {what}'),
+                                    InlineKeyboardButton(f'Дальше', callback_data=f'Дальше')]
+                               ])
+
+    return ikb
+
+
+def get_inline_keyboard_brod_change3(what):
+    ikb = InlineKeyboardMarkup(row_width=2,
+                               inline_keyboard=[
+                                   [InlineKeyboardButton(f'Изменить {what}', callback_data=f'Изменить {what}'),
+                                    InlineKeyboardButton(f'Дальше', callback_data=f'Дальше {what}')]
+                                               ]
+                               )
+
+
+    return ikb
+
+# 🥖 🥐🥯🍞🥨🌭🍔🥪🍩🍪☎️💸🛒🗑💌👤📷📧✉️🧹⚖️

@@ -64,7 +64,7 @@ async def check_photo(message: types.Message):
     return await message.reply('это не фото')
 
 
-@dp.message_handler(lambda message: message.photo,content_types=['photo'], state=ClientStartesGroup.photo)
+@dp.message_handler(lambda message: message.photo, content_types=['photo'], state=ClientStartesGroup.photo)
 async def load_photo(message: types.Message, state: FSMContext):
     async with state.proxy() as data:
         data['photo'] = message.photo[0].file_id

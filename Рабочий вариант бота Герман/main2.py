@@ -38,11 +38,24 @@ class FSMAdmin_Clients_del(StatesGroup):
 
 
 # FSM для регистрации нового хлеба
-class FSMAdmin_Brod(StatesGroup):
+class FSMAdmin_Brod_add(StatesGroup):
     Name = State()
+    Heft = State()
     Price_jr = State()
     Price_sl = State()
     Photo = State()
+    Confirmation = State()
+
+
+# FSM для регистрации нового хлеба
+class FSMAdmin_Brod_change(StatesGroup):
+    ID = State()
+    Name = State()
+    Heft = State()
+    Price_jr = State()
+    Price_sl = State()
+    Photo = State()
+    Confirmation = State()
 
 
 # моё
@@ -135,7 +148,7 @@ hi_text = 'Привет наш бот может принять заявку н�
 
 # функция информирующая о запуске бота
 async def on_startup(_):
-    print('Погнали!)')
+    print('Погнали!')
 
 
 # функция очистки переменных списков
@@ -891,9 +904,17 @@ async def start_work(message: types.Message):
     await FSMAdmin_Clients.Name.set()
     await message.answer('Напишите имя клиента например - ООО Колос',
                          reply_markup=keyboard.get_cancel())
-    # async def set(self):
-    #     state = Dispatcher.get_current().current_state()
-    #     await state.set_state(self.state)
+
+
+# Выход из машины состояний
+@dp.message_handler(commands=['cancel'], state='*')  # если нажали cancel в любом из состаяний
+async def cmd_cancel(message: types.Message, state: FSMContext):
+    if state == None:
+        return
+
+    await state.finish()
+    await message.reply('Вы прервали ввод данных!',
+                        reply_markup=keyboard.kb_menu_admin())
 
 
 # МАШИНА СОСТОЯНИЙ - добавление клиента ############
@@ -927,18 +948,12 @@ async def load_photo(message: types.Message, state: FSMContext):
     async with state.proxy() as data:
         data['Name_shop'] = message.text
 
-    list_clients = []
-    list_clients.append(data['name'])
-    list_clients.append(data['Phone_number'])
-    list_clients.append(data['Address'])
-    list_clients.append(data['Name_shop'])
-
     await FSMAdmin_Clients.next()
     await message.answer(f'Проверьте данные:\n'
-                         f'имя клиента: {list_clients[0]}\n'
-                         f'номер телефона: {list_clients[1]}\n'
-                         f'адрес: {list_clients[2]}\n'
-                         f'название магазина : {list_clients[3]}\n'
+                         f'имя клиента: {data["name"]}\n'
+                         f'номер телефона: {data["Phone_number"]}\n'
+                         f'адрес: {data["Address"]}\n'
+                         f'название магазина : {data["Name_shop"]}\n'
                          f'\n'
                          f'Если всё верно нажмите "Подтвердить"')
 
@@ -951,21 +966,11 @@ async def cmd_cancel(message: types.Message, state: FSMContext):
 
     # записать в bd
     result = bd.add_clients(list_clients)
+
     if result == True:
         await state.finish()
         await message.reply('Вы успешно добавили нового клиента!',
                             reply_markup=keyboard.kb_menu_admin())
-
-
-# Клиенты - добавить - выход из машины состаяний
-@dp.message_handler(commands=['cancel'], state='*')  # если нажали cancel в любом из состаяний
-async def cmd_cancel(message: types.Message, state: FSMContext):
-    if state == None:
-        return
-
-    await state.finish()
-    await message.reply('Вы прервали ввод данных!',
-                        reply_markup=keyboard.kb_menu_admin())
 
 
 # КЛИЕНТЫ - ИЗМЕНИТЬ
@@ -1046,20 +1051,15 @@ async def load_photo(message: types.Message, state: FSMContext):
     async with state.proxy() as data:
         data['Name_shop'] = message.text
 
-    list_clients = []
-    list_clients.append(data['id'])
-    list_clients.append(data['name'])
-    list_clients.append(data['Phone_number'])
-    list_clients.append(data['Address'])
-    list_clients.append(data['Name_shop'])
-
     await FSMAdmin_Clients_change.next()
-    await message.answer(f'Новые данные:\n'
-                         f'имя клиента: {list_clients[1]}\n'
-                         f'номер телефона: {list_clients[2]}\n'
-                         f'адрес: {list_clients[3]}\n'
-                         f'название магазина : {list_clients[4]}')
-    await message.answer('Если всё верно нажмите "Подтвердить"')
+    await message.answer(f'Проверьте данные:\n'
+                         f'имя клиента: {data["name"]}\n'
+                         f'номер телефона: {data["Phone_number"]}\n'
+                         f'адрес: {data["Address"]}\n'
+                         f'название магазина : {data["Name_shop"]}\n'
+                         f'\n'
+                         f'Если всё верно нажмите "Подтвердить"')
+
 
 # Клиенты - изменить - подтверждение изменения
 @dp.message_handler(commands=['Подтвердить'], state=FSMAdmin_Clients_change.Confirmation)
@@ -1123,6 +1123,18 @@ async def cmd_cancel(message: types.Message, state: FSMContext):
         await message.answer(f'Вы успешно удалили клиента {client[1]}!',
                              reply_markup=keyboard.kb_menu_admin())
 
+
+# Клиенты - удалить - выход из машины состаяний
+@dp.message_handler(commands=['cancel'], state='*')  # если нажали cancel в любом из состаяний
+async def cmd_cancel(message: types.Message, state: FSMContext):
+    if state == None:
+        return
+
+    await state.finish()
+    await message.reply('Вы прервали ввод данных!',
+                        reply_markup=keyboard.kb_menu_admin())
+
+
 ########################################################################################################################
 
 
@@ -1132,6 +1144,268 @@ async def admin_application(message: types.Message):
     await message.delete()
     await message.answer(text='Вы зашли в меню "Хлеб"',
                          reply_markup=keyboard.kb_menu_brod_admin())
+
+
+# menu 'Хлеб'- Добавить
+@dp.message_handler(Text(equals='Добавить + 🍞'))
+async def brod_add(message: types.Message):
+    await FSMAdmin_Brod_add.Name.set()
+    await message.answer('Напишите название хлеба например - Хлеб Степной',
+                         reply_markup=keyboard.get_cancel())
+
+
+@dp.message_handler(state=FSMAdmin_Brod_add.Name)
+async def load_brod_name(message: types.Message, state: FSMContext):
+    async with state.proxy() as data:
+        data['name'] = message.text
+
+    await FSMAdmin_Brod_add.next()
+    await message.reply('Запишите вес хлеба в граммах например: 500')
+
+
+@dp.message_handler(state=FSMAdmin_Brod_add.Heft)
+async def load_brod_heft(message: types.Message, state: FSMContext):
+    async with state.proxy() as data:
+        data['heft'] = message.text
+    await FSMAdmin_Brod_add.next()
+    await message.reply('А теперь добавьте цену хлеба для Ярового, например: 40')
+
+
+@dp.message_handler(state=FSMAdmin_Brod_add.Price_jr)
+async def load_brod_price_jr(message: types.Message, state: FSMContext):
+    async with state.proxy() as data:
+        data['price_jr'] = message.text
+    await FSMAdmin_Brod_add.next()
+    await message.reply('И цену хлеба для Славгорода, например: 41')
+
+
+@dp.message_handler(state=FSMAdmin_Brod_add.Price_sl)
+async def load_brod_price_sl(message: types.Message, state: FSMContext):
+    async with state.proxy() as data:
+        data['price_sl'] = message.text
+
+    await FSMAdmin_Brod_add.next()
+    await message.reply('А теперь добавьте фото хлеба:')
+
+
+@dp.message_handler(lambda message: not message.photo, state=FSMAdmin_Brod_add.Photo)
+async def check_photo(message: types.Message):
+    return await message.reply('это не фото')
+
+
+@dp.message_handler(lambda message: message.photo, content_types=['photo'], state=FSMAdmin_Brod_add.Photo)
+async def load_brod_photo(message: types.Message, state: FSMContext):
+    async with state.proxy() as data:
+        data['photo'] = message.photo[0].file_id
+
+    await FSMAdmin_Brod_add.next()
+    await bot.send_photo(chat_id=message.from_user.id,
+                         photo=data['photo'],
+                         caption=f'Название: {data["name"]}\n'
+                                 f'Вес: {data["heft"]}\n'
+                                 f'Цена для Ярового: {data["price_jr"]}\n'
+                                 f'Цена для Славгорода: {data["price_sl"]}\n')
+    await message.answer(text='Если всё верно нажмите "Подтвердить"')
+
+
+@dp.message_handler(commands=['Подтвердить'], state=FSMAdmin_Brod_add.Confirmation)
+async def cmd_cancel(message: types.Message, state: FSMContext):
+    async with state.proxy() as data:
+        list_data_brod_add = [data["name"], data["heft"], data["price_jr"], data["price_sl"], data["photo"]]
+        # запишем новый хлеб в базу данных=
+        result = bd.add_brod(list_data_brod_add)
+
+    if result == True:
+        await message.answer(f'Вы успешно добавили {data["name"]} в базу данных!',
+                             reply_markup=keyboard.kb_menu_admin())
+        await state.finish()
+
+
+# menu 'Хлеб'- Изменить
+
+# создадим переменную и будем помещать в неё новуб информацию о хлебе
+BROD = {}
+
+
+@dp.message_handler(Text(equals='Изменить 🍞🔄🥖'))
+async def brod_add(message: types.Message):
+    await FSMAdmin_Brod_change.ID.set()
+    await message.answer('Напишите название хлеба например - Хлеб Степной',
+                         reply_markup=keyboard.get_cancel())
+    # зайдем в bd и вытащим прайс хлеба со всеми данными
+    list_brod = bd.price_brod()
+    # сделаем в удобном формате строку с данными по хлебу(id-наименование)
+    list_str_brod = ''
+    for id_and_name in list_brod:
+        list_str_brod = f'{list_str_brod}\n' \
+                        f'id: <em>{id_and_name[0]}</em> - имя: <em>{id_and_name[1]}</em> '
+    # выведем получившейся список
+    await message.answer(text=f'<b>Прайс:</b>\n'
+                              f'{list_str_brod}',
+                         parse_mode="HTML")
+    await message.answer(text='Введите необходимый id :',
+                         reply_markup=keyboard.get_cancel())
+
+
+@dp.message_handler(state=FSMAdmin_Brod_change.ID)
+async def load_id(message: types.Message, state: FSMContext):
+    async with state.proxy() as data:
+        data['id'] = int(message.text)
+        # зайдем в bd и вытащим прайс хлеба со всеми данными
+        list_brod = bd.price_brod()
+
+        list_brod_change = []
+        # Вытащим нужный нам хлеб с данными по id и поместим в список
+        for brod in list_brod:
+            if brod[0] == data['id']:
+                for brod_data in brod:
+                    list_brod_change.append(brod_data)
+
+    # Поместим в наш словарь изначальные данные
+    global BROD
+    BROD = {'id': message.text, 'name': list_brod_change[1], 'heft': list_brod_change[2],
+            'price_jr': list_brod_change[3], 'price_sl': list_brod_change[4], 'photo': list_brod_change[5]}
+
+    await message.answer(f'Наименование: 🥨{list_brod_change[1]}🥨',
+                         reply_markup=keyboard.get_inline_keyboard_brod_change3('наименование'))
+    await state.finish()
+
+
+@dp.callback_query_handler(lambda callback_query: callback_query.data.startswith('Измен'))
+async def change(callback: types.CallbackQuery):
+    if callback.data == 'Изменить наименование':
+        await callback.message.answer(text='Введите новое имя:')
+        await FSMAdmin_Brod_change.Name.set()
+
+    if callback.data == 'Изменить вес':
+        await callback.message.answer(text='Введите новое вес:')
+        await FSMAdmin_Brod_change.Heft.set()
+
+    if callback.data == 'Изменить Цена Яровое':
+        await callback.message.answer(text='Введите новую цену:')
+        await FSMAdmin_Brod_change.Price_jr.set()
+
+    if callback.data == 'Изменить Цена Славгород':
+        await callback.message.answer(text='Введите новую цену:')
+        await FSMAdmin_Brod_change.Price_sl.set()
+
+    if callback.data == 'Изменить Фото':
+        await callback.message.answer(text='Добавьте новое фото:')
+        await FSMAdmin_Brod_change.Photo.set()
+
+
+@dp.callback_query_handler(lambda callback_query: callback_query.data.startswith('Дальше'))
+async def change(callback: types.CallbackQuery):
+    if callback.data == 'Дальше наименование':
+        await callback.message.answer(f'Вес: ⚖️{BROD["heft"]}⚖️',
+                                     reply_markup=keyboard.get_inline_keyboard_brod_change3('вес'))
+
+    if callback.data == 'Дальше вес':
+        await callback.message.answer(f'Цена Яровое: {BROD["price_jr"]}',
+                                     reply_markup=keyboard.get_inline_keyboard_brod_change3('Цена Яровое'))
+
+    if callback.data == 'Дальше Цена Яровое':
+        await callback.message.answer(f'Цена Славгород: {BROD["price_sl"]}',
+                                     reply_markup=keyboard.get_inline_keyboard_brod_change3('Цена Славгород'))
+
+    if callback.data == 'Дальше Цена Славгород':
+        await callback.message.answer(f'Фото: \n'
+                                     f'{BROD["photo"]}',
+                                     reply_markup=keyboard.get_inline_keyboard_brod_change3('Фото'))
+
+
+@dp.message_handler(state=FSMAdmin_Brod_change.Name)
+async def load_name(message: types.Message, state: FSMContext):
+    async with state.proxy() as data:
+        BROD['name'] = message.text
+
+    # зайдем в bd и вытащим прайс хлеба со всеми данными
+    list_brod = bd.price_brod()
+
+    await state.finish()
+
+    await message.answer(f'Вес: ⚖️{BROD["heft"]}⚖️',
+                        reply_markup=keyboard.get_inline_keyboard_brod_change3('вес'))
+
+    # 🥖 🥐🥯🍞🥨🌭🍔🥪🍩🍪☎️💸🛒🗑💌👤📷📧✉️
+
+
+@dp.message_handler(state=FSMAdmin_Brod_change.Heft)
+async def load_heft(message: types.Message, state: FSMContext):
+    async with state.proxy() as data:
+        BROD['heft'] = message.text
+
+    # зайдем в bd и вытащим прайс хлеба со всеми данными
+    list_brod = bd.price_brod()
+
+    await state.finish()
+
+    await message.answer(f'Цена Яровое: {BROD["price_jr"]}',
+                        reply_markup=keyboard.get_inline_keyboard_brod_change3('Цена Яровое'))
+
+
+@dp.message_handler(state=FSMAdmin_Brod_change.Price_jr)
+async def load_heft(message: types.Message, state: FSMContext):
+    async with state.proxy() as data:
+        BROD['price_jr'] = message.text
+
+    # зайдем в bd и вытащим прайс хлеба со всеми данными
+    list_brod = bd.price_brod()
+
+    await state.finish()
+
+    await message.answer(f'Цена Славгород: {BROD["price_sl"]}',
+                        reply_markup=keyboard.get_inline_keyboard_brod_change3('Цена Славгород'))
+
+
+@dp.message_handler(state=FSMAdmin_Brod_change.Price_sl)
+async def load_heft(message: types.Message, state: FSMContext):
+    async with state.proxy() as data:
+        BROD['price_sl'] = message.text
+
+    # зайдем в bd и вытащим прайс хлеба со всеми данными
+    list_brod = bd.price_brod()
+
+    await state.finish()
+
+    await message.answer(f'Фото: \n'
+                        f'{BROD["photo"]}',
+                        reply_markup=keyboard.get_inline_keyboard_brod_change3('Фото'))
+    await message.answer(text='Если всё верно нажмите "Подтвердить"')
+
+
+@dp.message_handler(lambda message: message.photo, content_types=['photo'], state=FSMAdmin_Brod_change.Photo)
+async def load_photo(message: types.Message, state: FSMContext):
+    async with state.proxy() as data:
+        BROD['photo'] = message.photo[0].file_id
+
+    # зайдем в bd и вытащим прайс хлеба со всеми данными
+    list_brod = bd.price_brod()
+
+    await FSMAdmin_Brod_change.next()
+
+    await bot.send_photo(chat_id=message.from_user.id,
+                         photo=BROD['photo'],
+                         caption=f'Название: {BROD["name"]}\n'
+                                 f'Вес: {BROD["heft"]}\n'
+                                 f'Цена для Ярового: {BROD["price_jr"]}\n'
+                                 f'Цена для Славгорода: {BROD["price_sl"]}\n')
+    await message.answer(text='Если всё верно нажмите "Подтвердить"')
+
+
+@dp.message_handler(commands=['Подтвердить'], state=FSMAdmin_Brod_change.Confirmation)
+async def cmd_cancel(message: types.Message, state: FSMContext):
+    async with state.proxy() as data:
+        list_data_brod_change = [BROD["id"], BROD["name"], BROD["heft"], BROD["price_jr"], BROD["price_sl"],
+                                 BROD["photo"]]
+
+        # запишем изменения в базу данных
+        result = bd.change_brod(list_data_brod_change)
+
+    if result == True:
+        await message.answer('Успешно!',
+                             reply_markup=keyboard.kb_menu_admin())
+        await state.finish()
 
 
 # menu '<< Назад'

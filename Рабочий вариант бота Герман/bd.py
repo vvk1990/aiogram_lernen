@@ -605,3 +605,46 @@ def del_clients(id_clients):
     conn.close()
 
     return True
+
+
+# ХЛЕБ - добавляем в bd
+def add_brod(list_data_brod_add):
+    conn = sq.connect('Works.db')
+    cur = conn.cursor()
+    cur.execute('''insert into Brod(Имя, Вес, Цена, Цена_Славгород, Фото)
+                   values(?, ?, ?, ?, ?)''',
+                (list_data_brod_add[0], list_data_brod_add[1], list_data_brod_add[2], list_data_brod_add[3],
+                 list_data_brod_add[4]))
+    conn.commit()
+    conn.close()
+    return True
+
+
+# Вывод списка хлеба Прайса для Ярового из bd
+def price_brod():
+    conn = sq.connect('Works.db')
+    cur = conn.cursor()
+    cur.execute('''select ХлебID, Имя, Вес, Цена, Цена_Славгород, Фото from Brod ''')
+    data_brod = []
+    for i in cur.fetchall():
+        data_brod.append(i)
+    conn.close()
+    return data_brod
+
+
+
+# ХЛЕБ - вносим изменения в bd
+def change_brod(list_data_brod_change):
+    conn = sq.connect('Works.db')
+    cur = conn.cursor()
+    cur.execute(f'''UPDATE Brod set Имя = ?,
+                                     Вес = ?,
+                                     Цена = ?,
+                                     Цена_Славгород = ?,
+                                     Фото = ?
+                                 where ХлебID == ?''',
+                (list_data_brod_change[1], list_data_brod_change[2], list_data_brod_change[3], list_data_brod_change[4],
+                 list_data_brod_change[5], list_data_brod_change[0]))
+    conn.commit()
+    conn.close()
+    return True
