@@ -31,6 +31,30 @@ class FSMAdmin_Clients_change(StatesGroup):
     Confirmation = State()
 
 
+# FSM для add ЗАЯВКИ
+class FSMAdmin_applications_add(StatesGroup):
+    Id = State()
+    Confirmation = State()
+
+
+
+# FSM для удаления ЗАЯВКИ
+class FSMAdmin_applications_del(StatesGroup):
+    Id = State()
+
+
+# FSM для add постоянной ЗАЯВКИ
+class FSMAdmin_constant_applications_add(StatesGroup):
+    Id = State()
+    Confirmation = State()
+
+
+# FSM для del постоянной ЗАЯВКИ
+class FSMAdmin_constant_applications_del(StatesGroup):
+    Id = State()
+    Confirmation = State()
+
+
 # FSM для удаления клиента
 class FSMAdmin_Clients_del(StatesGroup):
     Id = State()
@@ -47,7 +71,7 @@ class FSMAdmin_Brod_add(StatesGroup):
     Confirmation = State()
 
 
-# FSM для регистрации нового хлеба
+# FSM для изменения данных хлеба
 class FSMAdmin_Brod_change(StatesGroup):
     ID = State()
     Name = State()
@@ -55,6 +79,12 @@ class FSMAdmin_Brod_change(StatesGroup):
     Price_jr = State()
     Price_sl = State()
     Photo = State()
+    Confirmation = State()
+
+
+# FSM для удаления данных хлеба
+class FSMAdmin_Brod_del(StatesGroup):
+    ID = State()
     Confirmation = State()
 
 
@@ -342,7 +372,7 @@ async def basket(message: types.Message):
 
 #  Да, Нет, посмотреть старую заявку - на вопрос'перезаписать заявку'
 @dp.callback_query_handler(lambda callback_query: callback_query.data.startswith(
-    '!'))  # ильтруем сообщения и реагируем на сообзения начинабщиеся на '+'
+    '!'))
 async def ikb_cd_handler(callback: types.CallbackQuery):
     # получим имя клиента и его индекс
     id_clients = bd.name_and_id_clients(callback.from_user.id)[0]
@@ -524,6 +554,10 @@ async def admin_application(message: types.Message):
                          reply_markup=keyboard.kb_menu_application_admin())
 
 
+# создадим словарь куда, будем помещать изменения по клиенту
+CLIENTS = {}
+
+
 # menu 'Заявки' - добавить
 @dp.message_handler(Text(contains='Добавить + 📝, Изменить 🔄'))
 async def add_application(message: types.Message):
@@ -539,20 +573,19 @@ async def add_application(message: types.Message):
     await message.answer(text=f'<b>Клиенты:</b>\n'
                               f'{list_str_clients}',
                          parse_mode="HTML")
-    await message.answer(text='Введите id клиента\n'
-                              'в виде - id1234!"')
+    await message.answer(text='Введите id клиента:')
+    await FSMAdmin_applications_add.Id.set()
 
 
 # 'Заявки' - добавить - ловим id клиента
-@dp.message_handler(Text(contains='id'))
-async def catch_id_clients(message: types.Message):
-    # возьмем id и найдем по нему имя из bd
-    id_clients = message.text[2:len(message.text)]
-    name_clients = bd.name_clients(id_clients)
+@dp.message_handler(state=FSMAdmin_applications_add.Id)
+async def catch_id_clients(message: types.Message, state: FSMContext):
+    async with state.proxy() as data:
+        CLIENTS['id'] = int(message.text)
 
-    # добавим данные в id_and_name_clients = []
-    id_and_name_clients.append(id_clients)
-    id_and_name_clients.append(name_clients)
+
+    # возьмем id и найдем по нему имя из bd
+    CLIENTS['name_clients'] = bd.name_clients(CLIENTS['id'])
 
     # зпустим инлайн заявку
     ind_list1 = 0
@@ -570,15 +603,15 @@ async def catch_id_clients(message: types.Message):
         ind_list2 += 1
 
     await message.answer(text='Конец списка_____________________')
+    await state.finish()
 
 
-# 'Подтверждение заявки'
 @dp.message_handler(Text(equals='Подтвердить ✍️'))
 async def reg_applikations(message: types.Message):
     await message.delete()
     # получим имя клиента и его индекс из bd
-    id_clients = id_and_name_clients[0]
-    name_clients = id_and_name_clients[1]
+    id_clients = CLIENTS['id']
+    name_clients = CLIENTS["name_clients"]
 
     # запишем только что полученные id и name в список для внесения мзменений в щаявку через бд
     for i in (id_clients, name_clients):
@@ -597,6 +630,7 @@ async def reg_applikations(message: types.Message):
         await message.answer(text=f'Для "{name_clients}" уже создана заявка')
         await message.answer(text='Перезаписать ⁉',
                              reply_markup=keyboard.get_inline_keyboard_yes_no_look_admin())
+    CLIENTS.clear()
 
 
 # Да, Нет, посмотреть старую заявку - на вопрос 'перезаписать заявку'
@@ -663,7 +697,7 @@ async def basket(message: types.Message):
     await message.delete()
 
     # узнаем id клиента(славгород или яровое) из bd
-    id_klients = id_and_name_clients[0]
+    id_klients = CLIENTS['id']
 
     # если id клиента относится к яровому тогда возьмем Яровские цены хлеба из таблицы Хлеб и поместим их в список
     if int(id_klients) < 22:
@@ -704,24 +738,43 @@ async def clear_app(message: types.Message):
     await message.answer(text=f'<b>Клиенты:</b>\n'
                               f'{list_str_clients}',
                          parse_mode="HTML")
-    await message.answer(text='Введите id клиента\n'
-                              'в виде "ud123"!"')
+    await message.answer(text='Введите id клиента')
+    await FSMAdmin_applications_del.Id.set()
 
 
-# 'Заявки'- Удалить - ловим ID клиента, чтобы удалить его
-@dp.message_handler(Text(contains='ud'))
-async def get_days_of_week(message: types.Message):
-    # возьмем id из нашего сообщения и найдем по нему имя из bd
-    id_clients = message.text[2:len(message.text)]
-    name_clients = bd.name_clients(id_clients)
+# 'Заявки' - удалить - ловим id клиента
+@dp.message_handler(state=FSMAdmin_applications_del.Id)
+async def catch_id_clients(message: types.Message, state: FSMContext):
+    async with state.proxy() as data:
+        CLIENTS['id'] = int(message.text)
+
+
+    # возьмем id и найдем по нему имя из bd
+    CLIENTS['name_clients'] = bd.name_clients(CLIENTS['id'])
 
     # зайдем в bd и удалим запись по id
 
-    bd.del_applications(id_clients)
+    bd.del_applications(CLIENTS['id'])
 
     # выводим инлайн клавиатуру с днями недели
-    await message.answer(text=f'Заявка для {name_clients} на завтра, успешно УДАЛЕНА!!!',
+    await message.answer(text=f'Заявка для {CLIENTS["name_clients"]} на завтра, успешно УДАЛЕНА!!!',
                          reply_markup=keyboard.kb_menu_admin())
+    await state.finish()
+#
+# # 'Заявки'- Удалить - ловим ID клиента, чтобы удалить его
+# @dp.message_handler(Text(contains='ud'))
+# async def get_days_of_week(message: types.Message):
+#     # возьмем id из нашего сообщения и найдем по нему имя из bd
+#     id_clients = message.text[2:len(message.text)]
+#     name_clients = bd.name_clients(id_clients)
+#
+#     # зайдем в bd и удалим запись по id
+#
+#     bd.del_applications(id_clients)
+#
+#     # выводим инлайн клавиатуру с днями недели
+#     await message.answer(text=f'Заявка для {name_clients} на завтра, успешно УДАЛЕНА!!!',
+#                          reply_markup=keyboard.kb_menu_admin())
 
 
 # menu 'ПОСТОЯННЫЕ ЗАЯВКИ'
@@ -747,38 +800,34 @@ async def add_application(message: types.Message):
     await message.answer(text=f'<b>Клиенты:</b>\n'
                               f'{list_str_clients}',
                          parse_mode="HTML")
-    await message.answer(text='Введите id клиента\n'
-                              'в виде - pid1234!"')
+    await message.answer(text='Введите id клиента:')
+
+    await FSMAdmin_constant_applications_add.Id.set()
 
 
 # 'Постоянные заявки'- добавить - ловим ID клиента и выдаем клавиатуру с днями недели для выбора
-@dp.message_handler(Text(contains='pid'))
-async def get_days_of_week(message: types.Message):
-    # возьмем id из нашего сообщения и найдем по нему имя из bd
-    id_clients = message.text[3:len(message.text)]
-    name_clients = bd.name_clients(id_clients)
-
-    # поместим ID и NAME в наш список id_clients_end_day_of_weec_permanent_applications
-    id_clients_end_day_of_weec_permanent_applications.append(id_clients)
-    id_clients_end_day_of_weec_permanent_applications.append(name_clients)
+@dp.message_handler(state=FSMAdmin_constant_applications_add.Id)
+async def get_days_of_week(message: types.Message, state: FSMContext):
+    async with state.proxy() as data:
+        CLIENTS['id'] = int(message.text)
+    # возьмем id из нашего сообщения и найдем по нему имя
+    CLIENTS['name_clients'] = bd.name_clients(CLIENTS['id'])
 
     # выводим инлайн клавиатуру с днями недели
     await message.answer(text='Выберете день недели 🗓',
                          reply_markup=keyboard.get_inline_keyboard_deys_of_week('add'))
+    await state.finish()
 
 
 # 'Постоянные заявки'- добавить - ловим день недели и выдаем инлайн кл для заявки с данными(старой заявкой)
 @dp.callback_query_handler(lambda callback_query: callback_query.data.startswith('add'))
-async def get_aplication(callback: types.CallbackQuery):
+async def get_application(callback: types.CallbackQuery):
     # присваиваем переменным название дня недели
-    name_table = callback.data[3:len(callback.data)]
-    id_clients = id_clients_end_day_of_weec_permanent_applications[0]
-
-    # поместим имя таблицы(день недели) в наш список
-    id_clients_end_day_of_weec_permanent_applications.append(name_table)
+    CLIENTS['name_table'] = callback.data[3:len(callback.data)]
+    id_clients = CLIENTS['id']
 
     # подгрузим старую заявку в виде списка в переменную
-    list_permanent_applications = bd.permanent_applications(id_clients, name_table)
+    list_permanent_applications = bd.permanent_applications(id_clients, CLIENTS['name_table'])
 
     # если не оказалась старой заявки, то загрузим пустые значения
     if len(list_permanent_applications) < 2:
@@ -821,19 +870,20 @@ async def get_aplication(callback: types.CallbackQuery):
 async def admin_application(message: types.Message):
     await message.delete()
     # получим имя клиента и его индекс из переменной id_clients_end_day_of_weec_permanent_applications
-    id_clients = id_clients_end_day_of_weec_permanent_applications[0]
-    name_clients = id_clients_end_day_of_weec_permanent_applications[1]
-    name_table = id_clients_end_day_of_weec_permanent_applications[2]
+    id_clients = CLIENTS['id']
+    name_clients = CLIENTS['name_clients']
+    name_table = CLIENTS['name_table']
 
     # запишем нашу постоянную заявку в bd
-    result_create_aplication = bd.save_permanent_applications(id_clients, name_clients, list_aplication1, name_table)
-    if result_create_aplication == True:
-        await message.answer(text=f'Вы успешно зарегистрировали постоянную заявку для:\n{name_clients}',
+    result_create_application = bd.save_permanent_applications(id_clients, name_clients, list_aplication1, name_table)
+    if result_create_application == True:
+        await message.answer(text=f'Вы успешно зарегистрировали постоянную заявку для:\n{name_clients}\n'
+                                  f'в(во): {name_table}',
                              reply_markup=keyboard.kb_menu_admin())
         # восстанавливаем значение списка заявок в первоначальное состояние
         clear_list_app()
-
-
+    # очистим словарь
+    CLIENTS.clear()
 # 'Постоянные заявки' - Удалить
 @dp.message_handler(Text(equals='Удалить 🚮'))
 async def add_application(message: types.Message):
@@ -849,33 +899,32 @@ async def add_application(message: types.Message):
     await message.answer(text=f'<b>Клиенты:</b>\n'
                               f'{list_str_clients}',
                          parse_mode="HTML")
-    await message.answer(text='Введите id клиента\n'
-                              'в виде "u123"!"')
+    await message.answer(text='Введите id клиента')
 
+    await FSMAdmin_constant_applications_del.Id.set()
 
 # 'Постоянные заявки'- Удалить - ловим ID клиента, чтобы удалить его
-@dp.message_handler(Text(contains='u'))
-async def get_days_of_week(message: types.Message):
+@dp.message_handler(state=FSMAdmin_constant_applications_del.Id)
+async def get_days_of_week(message: types.Message, state=FSMContext):
+    async with state.proxy() as data:
+        CLIENTS['id'] = int(message.text)
     # возьмем id из нашего сообщения и найдем по нему имя из bd
-    id_clients = message.text[1:len(message.text)]
-    name_clients = bd.name_clients(id_clients)
+    CLIENTS['name_clients'] = bd.name_clients(CLIENTS['id'])
 
-    # запишем id и name в нашу переменную для поиска в bd
-    id_clients_end_day_of_weec_permanent_applications.append(id_clients)
-    id_clients_end_day_of_weec_permanent_applications.append(name_clients)
 
     # выводим инлайн клавиатуру с днями недели
     await message.answer(text='Выберете день недели 🗓',
                          reply_markup=keyboard.get_inline_keyboard_deys_of_week('del'))
+    await state.finish()
 
 
 # 'Постоянные заявки'- Удалить - ловим день недели и удаляем постоянную заявку
 @dp.callback_query_handler(lambda callback_query: callback_query.data.startswith('del'))
 async def get_aplication(callback: types.CallbackQuery):
     # присваиваем переменным id и название дня недели
-    id_clients = id_clients_end_day_of_weec_permanent_applications[0]
+    id_clients = CLIENTS['id']
     name_table = callback.data[3:len(callback.data)]
-    name_clients = id_clients_end_day_of_weec_permanent_applications[1]
+    name_clients = CLIENTS['name_clients']
 
     # заходим в bd и удаляем постоянную заявку по id
     result = bd.del_permanent_applications(id_clients, name_table)
@@ -888,7 +937,7 @@ async def get_aplication(callback: types.CallbackQuery):
 
     # очистим наши вспомогательные списки
     clear_list_app()
-
+    CLIENTS.clear()
 
 # menu 'КЛИЕНТЫ'
 @dp.message_handler(Text(equals='Клиенты 👤'))
@@ -973,6 +1022,8 @@ async def cmd_cancel(message: types.Message, state: FSMContext):
                             reply_markup=keyboard.kb_menu_admin())
 
 
+
+
 # КЛИЕНТЫ - ИЗМЕНИТЬ
 @dp.message_handler(Text(equals='Изменить 🔄 👤', ignore_case=True), state=None)
 async def client_change(message: types.Message):
@@ -997,66 +1048,105 @@ async def client_change(message: types.Message):
 @dp.message_handler(state=FSMAdmin_Clients_change.Id)
 async def load_name(message: types.Message, state: FSMContext):
     async with state.proxy() as data:
+
         data['id'] = message.text
+        # зайдем в bd и вытащим прайс хлеба со всеми данными
+        list_clients = bd.get_info_client(int(data['id']))
 
-    # из bd вытащим данные клиента и поместим в список
-    client = bd.get_info_client(data['id'])
 
-    await FSMAdmin_Clients_change.next()
-    await message.reply(f'Старое имя: {client[1]}\n'
-                        f'Запишите новое имя')
+    # Поместим в наш словарь изначальные данные
+    global CLIENTS
+    CLIENTS = {'id': int(message.text), 'name': list_clients[1], 'phone_number': list_clients[2],
+               'address': list_clients[3], 'name_shop': list_clients[4]}
+
+    await message.answer(f'Наименование: {list_clients[1]}',
+                         reply_markup=keyboard.get_inline_keyboard_client_change('имя'))
+    await state.finish()
+
+
+@dp.callback_query_handler(lambda callback_query: callback_query.data.startswith('Меняем'))
+async def change(callback: types.CallbackQuery):
+    if callback.data == 'Меняем имя':
+        await callback.message.answer(text='Введите новое имя:')
+        await FSMAdmin_Clients_change.Name.set()
+    if callback.data == 'Меняем телефон ':
+        await callback.message.answer(text='Введите новый номер:')
+        await FSMAdmin_Clients_change.Phone_number.set()
+
+    if callback.data == 'Меняем адрес':
+        await callback.message.answer(text='Введите новый адрес:')
+        await FSMAdmin_Clients_change.Address.set()
+
+    if callback.data == 'Меняем название магазина':
+        await callback.message.answer(text='Введите новое название:')
+        await FSMAdmin_Clients_change.Name_shop.set()
+
+
+@dp.callback_query_handler(lambda callback_query: callback_query.data.startswith('Вперед'))
+async def change(callback: types.CallbackQuery):
+    if callback.data == 'Вперед имя':
+        await callback.message.answer(f'Номер:  {CLIENTS["phone_number"]}',
+                                      reply_markup=keyboard.get_inline_keyboard_client_change('телефон'))
+
+    if callback.data == 'Вперед телефон':
+        await callback.message.answer(f'Адрес: {CLIENTS["address"]}"',
+                                      reply_markup=keyboard.get_inline_keyboard_client_change('адрес'))
+
+    if callback.data == 'Вперед адрес':
+        await callback.message.answer(f'Название магазина: {CLIENTS["name_shop"]}',
+                                      reply_markup=keyboard.get_inline_keyboard_client_change('название магазина'))
 
 
 @dp.message_handler(state=FSMAdmin_Clients_change.Name)
 async def load_name(message: types.Message, state: FSMContext):
     async with state.proxy() as data:
-        data['name'] = message.text
+        CLIENTS['name'] = message.text
 
     # из bd вытащим данные клиента и поместим в список
-    client = bd.get_info_client(data['id'])
+    client = bd.get_info_client(CLIENTS['id'])
 
-    await FSMAdmin_Clients_change.next()
-    await message.reply(f'Старый телефон: {client[2]}\n'
-                        f'Запишите новый номер телефона:')
+    await state.finish()
+    await message.answer(f'Номер телефона: ⚖️{CLIENTS["phone_number"]}',
+                         reply_markup=keyboard.get_inline_keyboard_client_change('телефон'))
 
 
 @dp.message_handler(state=FSMAdmin_Clients_change.Phone_number)
-async def load_photo(message: types.Message, state: FSMContext):
+async def load_photo_number(message: types.Message, state: FSMContext):
     async with state.proxy() as data:
-        data['Phone_number'] = message.text
+        CLIENTS['phone_number'] = message.text
 
     # из bd вытащим данные клиента и поместим в список
-    client = bd.get_info_client(data['id'])
+    client = bd.get_info_client(CLIENTS['id'])
 
-    await FSMAdmin_Clients_change.next()
-    await message.reply(f'Cтарый адрес: {client[3]}\n'
-                        f'А теперь добавьте новый адрес клиента:')
+    await state.finish()
+    await message.reply(f'Cтарый адрес: {CLIENTS["address"]}\n',
+                        reply_markup=keyboard.get_inline_keyboard_client_change('адрес'))
 
 
 @dp.message_handler(state=FSMAdmin_Clients_change.Address)
-async def load_photo(message: types.Message, state: FSMContext):
+async def load_address(message: types.Message, state: FSMContext):
     async with state.proxy() as data:
-        data['Address'] = message.text
+        CLIENTS['address'] = message.text
 
     # из bd вытащим данные клиента и поместим в список
-    client = bd.get_info_client(data['id'])
+    client = bd.get_info_client(CLIENTS['id'])
 
-    await FSMAdmin_Clients_change.next()
-    await message.reply(f'Старое название: {client[4]}\n'
-                        f'И новое название магазина:')
+    await state.finish()
+    await message.reply(f'Старое название: {CLIENTS["name_shop"]}\n',
+                        reply_markup=keyboard.get_inline_keyboard_client_change('Название магазина'))
 
 
 @dp.message_handler(state=FSMAdmin_Clients_change.Name_shop)
-async def load_photo(message: types.Message, state: FSMContext):
+async def load_name_shop(message: types.Message, state: FSMContext):
     async with state.proxy() as data:
-        data['Name_shop'] = message.text
+        CLIENTS['name_shop'] = message.text
 
     await FSMAdmin_Clients_change.next()
     await message.answer(f'Проверьте данные:\n'
-                         f'имя клиента: {data["name"]}\n'
-                         f'номер телефона: {data["Phone_number"]}\n'
-                         f'адрес: {data["Address"]}\n'
-                         f'название магазина : {data["Name_shop"]}\n'
+                         f'имя клиента: {CLIENTS["name"]}\n'
+                         f'номер телефона: {CLIENTS["phone_number"]}\n'
+                         f'адрес: {CLIENTS["address"]}\n'
+                         f'название магазина : {CLIENTS["name_shop"]}\n'
                          f'\n'
                          f'Если всё верно нажмите "Подтвердить"')
 
@@ -1065,7 +1155,7 @@ async def load_photo(message: types.Message, state: FSMContext):
 @dp.message_handler(commands=['Подтвердить'], state=FSMAdmin_Clients_change.Confirmation)
 async def cmd_cancel(message: types.Message, state: FSMContext):
     async with state.proxy() as data:
-        list_clients = [data['id'], data['name'], data['Phone_number'], data['Address'], data['Name_shop']]
+        list_clients = [CLIENTS['id'], CLIENTS['name'], CLIENTS['phone_number'], CLIENTS['address'], CLIENTS['name_shop']]
 
     # записать в bd
     result = bd.change_clients(list_clients)
@@ -1133,6 +1223,9 @@ async def cmd_cancel(message: types.Message, state: FSMContext):
     await state.finish()
     await message.reply('Вы прервали ввод данных!',
                         reply_markup=keyboard.kb_menu_admin())
+
+    # очистим словарь
+    BROD.clear()
 
 
 ########################################################################################################################
@@ -1226,7 +1319,6 @@ async def cmd_cancel(message: types.Message, state: FSMContext):
 # создадим переменную и будем помещать в неё новуб информацию о хлебе
 BROD = {}
 
-
 @dp.message_handler(Text(equals='Изменить 🍞🔄🥖'))
 async def brod_add(message: types.Message):
     await FSMAdmin_Brod_change.ID.set()
@@ -1297,21 +1389,24 @@ async def change(callback: types.CallbackQuery):
 @dp.callback_query_handler(lambda callback_query: callback_query.data.startswith('Дальше'))
 async def change(callback: types.CallbackQuery):
     if callback.data == 'Дальше наименование':
-        await callback.message.answer(f'Вес: ⚖️{BROD["heft"]}⚖️',
-                                     reply_markup=keyboard.get_inline_keyboard_brod_change3('вес'))
+        await callback.message.answer(f'Вес: ⚖️ {BROD["heft"]}',
+                                      reply_markup=keyboard.get_inline_keyboard_brod_change3('вес'))
 
     if callback.data == 'Дальше вес':
         await callback.message.answer(f'Цена Яровое: {BROD["price_jr"]}',
-                                     reply_markup=keyboard.get_inline_keyboard_brod_change3('Цена Яровое'))
+                                      reply_markup=keyboard.get_inline_keyboard_brod_change3('Цена Яровое'))
 
     if callback.data == 'Дальше Цена Яровое':
         await callback.message.answer(f'Цена Славгород: {BROD["price_sl"]}',
-                                     reply_markup=keyboard.get_inline_keyboard_brod_change3('Цена Славгород'))
+                                      reply_markup=keyboard.get_inline_keyboard_brod_change3('Цена Славгород'))
 
     if callback.data == 'Дальше Цена Славгород':
-        await callback.message.answer(f'Фото: \n'
-                                     f'{BROD["photo"]}',
-                                     reply_markup=keyboard.get_inline_keyboard_brod_change3('Фото'))
+        # await callback.message.answer(f'Фото: \n'
+        #                               f'{BROD["photo"]}',
+        #                               reply_markup=keyboard.get_inline_keyboard_brod_change3('Фото'))
+        await bot.send_photo(chat_id=callback.from_user.id,
+                             photo=BROD['photo'],
+                             reply_markup=keyboard.get_inline_keyboard_brod_change3('Фото'))
 
 
 @dp.message_handler(state=FSMAdmin_Brod_change.Name)
@@ -1325,7 +1420,7 @@ async def load_name(message: types.Message, state: FSMContext):
     await state.finish()
 
     await message.answer(f'Вес: ⚖️{BROD["heft"]}⚖️',
-                        reply_markup=keyboard.get_inline_keyboard_brod_change3('вес'))
+                         reply_markup=keyboard.get_inline_keyboard_brod_change3('вес'))
 
     # 🥖 🥐🥯🍞🥨🌭🍔🥪🍩🍪☎️💸🛒🗑💌👤📷📧✉️
 
@@ -1341,7 +1436,7 @@ async def load_heft(message: types.Message, state: FSMContext):
     await state.finish()
 
     await message.answer(f'Цена Яровое: {BROD["price_jr"]}',
-                        reply_markup=keyboard.get_inline_keyboard_brod_change3('Цена Яровое'))
+                         reply_markup=keyboard.get_inline_keyboard_brod_change3('Цена Яровое'))
 
 
 @dp.message_handler(state=FSMAdmin_Brod_change.Price_jr)
@@ -1355,7 +1450,7 @@ async def load_heft(message: types.Message, state: FSMContext):
     await state.finish()
 
     await message.answer(f'Цена Славгород: {BROD["price_sl"]}',
-                        reply_markup=keyboard.get_inline_keyboard_brod_change3('Цена Славгород'))
+                         reply_markup=keyboard.get_inline_keyboard_brod_change3('Цена Славгород'))
 
 
 @dp.message_handler(state=FSMAdmin_Brod_change.Price_sl)
@@ -1369,8 +1464,8 @@ async def load_heft(message: types.Message, state: FSMContext):
     await state.finish()
 
     await message.answer(f'Фото: \n'
-                        f'{BROD["photo"]}',
-                        reply_markup=keyboard.get_inline_keyboard_brod_change3('Фото'))
+                         f'{BROD["photo"]}',
+                         reply_markup=keyboard.get_inline_keyboard_brod_change3('Фото'))
     await message.answer(text='Если всё верно нажмите "Подтвердить"')
 
 
@@ -1406,6 +1501,79 @@ async def cmd_cancel(message: types.Message, state: FSMContext):
         await message.answer('Успешно!',
                              reply_markup=keyboard.kb_menu_admin())
         await state.finish()
+
+    # очистим словарь
+    BROD.clear()
+
+
+
+# Хлеб - УДАЛИТЬ
+@dp.message_handler(Text(equals='Удалить - 🗑'))
+async def brod_add(message: types.Message):
+    await FSMAdmin_Brod_del.ID.set()
+    await message.answer('Список хлеба:',
+                         reply_markup=keyboard.get_cancel())
+    # зайдем в bd и вытащим прайс хлеба со всеми данными
+    list_brod = bd.price_brod()
+    # сделаем в удобном формате строку с данными по хлебу(id-наименование)
+    list_str_brod = ''
+    for id_and_name in list_brod:
+        list_str_brod = f'{list_str_brod}\n' \
+                        f'id: <em>{id_and_name[0]}</em> - имя: <em>{id_and_name[1]}</em> '
+    # выведем получившейся список
+    await message.answer(text=f'<b>Прайс:</b>\n'
+                              f'{list_str_brod}',
+                         parse_mode="HTML")
+    await message.answer(text='Введите необходимый id :',
+                         reply_markup=keyboard.get_cancel())
+
+
+
+# ловим ID для удаления хлеба
+@dp.message_handler(state=FSMAdmin_Brod_del.ID)
+async def load_id(message: types.Message, state: FSMContext):
+    async with state.proxy() as data:
+        BROD['id'] = int(message.text)
+    await FSMAdmin_Brod_del.next()
+
+    # зайдем в bd и вытащим прайс хлеба со всеми данными
+    list_brod = bd.price_brod()
+
+    list_brod_del = []
+
+    for data_brod in list_brod:
+        if data_brod[0] == BROD['id']:
+            for da in data_brod:
+                list_brod_del.append(da)
+
+
+    await message.reply(text=f'Если вы хотите удалить: {list_brod_del[1]}\n'
+                             f'нажмите "Подтвердить" ')
+
+
+@dp.message_handler(commands=['Подтвердить'], state=FSMAdmin_Brod_del.Confirmation)
+async def cmd_cancel(message: types.Message, state: FSMContext):
+    # зайдем в bd и вытащим прайс хлеба со всеми данными
+    list_brod = bd.price_brod()
+
+    list_brod_del = []
+
+    for data_brod in list_brod:
+        if data_brod[0] == BROD['id']:
+            for da in data_brod:
+                list_brod_del.append(da)
+
+    # Удалим хлеб из bd по id
+    result = bd.del_brod(BROD['id'])
+    if result == True:
+        await message.answer(f'Наименование: 🥨{list_brod_del[1]}\n'
+                             f'было успешно удалено!',
+                             reply_markup=keyboard.kb_menu_admin())
+
+    await state.finish()
+
+    # очистим словарь
+    BROD.clear()
 
 
 # menu '<< Назад'

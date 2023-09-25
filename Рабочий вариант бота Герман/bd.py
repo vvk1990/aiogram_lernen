@@ -376,7 +376,7 @@ def list_id2_clients():
 def permanent_applications(id_clients, name_table):
     conn = sq.connect('Works.db')
     cur = conn.cursor()
-    cur.execute(f'''select * from {name_table} where ClientsID == ?''', (int(id_clients[0]),))
+    cur.execute(f'''select * from {name_table} where ClientsID == ?''', (int(id_clients),))
     value = cur.fetchall()
     list_val = []
     # выгружаем данные кортежа в список
@@ -632,7 +632,6 @@ def price_brod():
     return data_brod
 
 
-
 # ХЛЕБ - вносим изменения в bd
 def change_brod(list_data_brod_change):
     conn = sq.connect('Works.db')
@@ -645,6 +644,17 @@ def change_brod(list_data_brod_change):
                                  where ХлебID == ?''',
                 (list_data_brod_change[1], list_data_brod_change[2], list_data_brod_change[3], list_data_brod_change[4],
                  list_data_brod_change[5], list_data_brod_change[0]))
+    conn.commit()
+    conn.close()
+    return True
+
+
+# Хлеб - удаляем хлеб из bd
+def del_brod(id_brod):
+    conn = sq.connect('Works.db')
+    cur = conn.cursor()
+    cur.execute(f''' DELETE from Brod
+                     WHERE ХлебID == {id_brod} ''')
     conn.commit()
     conn.close()
     return True

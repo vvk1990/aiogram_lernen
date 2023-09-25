@@ -297,12 +297,23 @@ def get_inline_keyboard_brod_change2(what, data):
 def get_inline_keyboard_brod_change3(what):
     ikb = InlineKeyboardMarkup(row_width=2,
                                inline_keyboard=[
-                                   [InlineKeyboardButton(f'Изменить {what}', callback_data=f'Изменить {what}'),
-                                    InlineKeyboardButton(f'Дальше', callback_data=f'Дальше {what}')]
+                                   [InlineKeyboardButton('Изменить', callback_data=f'Изменить {what}'),
+                                    InlineKeyboardButton('Дальше', callback_data=f'Дальше {what}')]
                                                ]
                                )
 
 
     return ikb
 
+# клиент клава изменить- дальше
+def get_inline_keyboard_client_change(what):
+    ikb = InlineKeyboardMarkup(row_width=2,
+                               inline_keyboard=[
+                                   [InlineKeyboardButton('Изменить', callback_data=f'Меняем {what}'),
+                                    InlineKeyboardButton('Дальше', callback_data=f'Вперед {what}')]
+                                               ]
+                               )
+
+
+    return ikb
 # 🥖 🥐🥯🍞🥨🌭🍔🥪🍩🍪☎️💸🛒🗑💌👤📷📧✉️🧹⚖️
