@@ -65,8 +65,22 @@ def name_clients(user_id):
     conn.close()
     return name_clients
 
+# Создадим функцию вывода имени клиента по его id2
+def name_clients2(user_id):
+    conn = sq.connect('Works.db')
+    cur = conn.cursor()
+    cur.execute('''select  Name from Clients where ClientsID2 == ?''', (user_id,))
+    data_clients = []
+    for i in cur.fetchone():
+        data_clients.append(i)
+    print(data_clients)
+    name_clients = data_clients[0]
 
-# Создадим функцию вывода имени клиента и его id в bd
+    conn.close()
+    return name_clients
+
+
+# Создадим функцию вывода имени клиента и его id2 в bd
 def name_and_id_clients(user_id):
     conn = sq.connect('Works.db')
     cur = conn.cursor()
@@ -91,6 +105,35 @@ def id_and_name_all_clients():
         data_clients.append(i)
     conn.close()
     return data_clients
+
+
+
+
+# функция просмотрзаявки на наличие
+def applications_true_falshe(name_clients):
+    # получаем имя таблицы "сегодняшнюю дату"
+    date_today = datetime.datetime.today()
+    # получаем завтрашнюю дату
+    date_tomorrow = date_today + datetime.timedelta(days=1)
+    # создаём переменную с завтрашней датой в удобном формате
+    name_table_application = date_tomorrow.strftime('day_%d_%m_%y')
+
+    # создадим переменную и поместим в неё список имен клиентов сделавших заявку
+    list_clients_aplication1 = []
+
+    # залезаем в базу данных и запросим индексы организаций которые уже сделали заявку на этот день
+    conn = sq.connect('Works.db')
+    cur = conn.cursor()
+    cur.execute(f'''select Name_Clients from {name_table_application}''')
+    for i in cur.fetchall():
+        for ii in i:
+            list_clients_aplication1.append(ii)
+    conn.close()
+    # проверим есть ли заявку у нашего клиента, и выдадим да или нет
+    if name_clients in list_clients_aplication1:
+        return True
+    else:
+        return False
 
 
 # создадим таблицу для основной заявки если её ещё нет и запишем в нее заявку клиента

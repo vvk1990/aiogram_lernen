@@ -210,10 +210,9 @@ def clear_list_app():
 # ЗАЯВКА
 ########################################################################################################################
 # этот хендлер обрабатывает только фразу 'Сделать_заявку' и выдаёт первый список хлеба
-@dp.message_handler(Text(equals='Сделать заявку 🍞'))
+@dp.message_handler(Text(equals='Сделать  🍞/ изменить заявку'))
 async def cdm_make_application(message: types.Message):
     await message.delete()
-
     ind_list1 = 0
     ind_list2 = 0
     await message.answer(
@@ -228,6 +227,32 @@ async def cdm_make_application(message: types.Message):
                              parse_mode="HTML")  # запускаем инлайн клавиатуру
         ind_list2 += 1
     await message.answer(text='_________________________________')
+
+
+# Удалить заявку
+@dp.message_handler(Text(equals='Удалить заявку'))
+async def del_application(message: types.Message):
+    await message.delete()
+    ind_list1 = 0
+    ind_list2 = 0
+
+    # получим имя клиента
+    name_and_id_clients = bd.name_and_id_clients(message.from_user.id)
+
+    # зайдем в bd и узнаем, существует ли заявка для этого клиента
+    applications = bd.applications_true_falshe(name_and_id_clients[1])
+
+    # если была заявка:
+    if applications == True:
+        # зайдем в bd и удалим заявку
+        result = bd.del_applications(name_and_id_clients[0])
+        if result == True:
+
+            await message.answer(text=f'Вы успешно удалили заявку для: {name_and_id_clients[1]}!')
+
+    else:
+        await message.answer(text=f'Заявки для клиента: {name_and_id_clients} не существует!',
+                             reply_markup=keyboard.kb_menu())
 
 
 # '+' к заявке
@@ -344,8 +369,7 @@ async def basket(message: types.Message):
     await message.delete()
 
     # узнаем id клиента(славгород или яровое) из bd
-    id_klients = bd.name_and_id_clients(message.from_user.id)[0]
-
+    id_klients = bd.name_and_id_clients(message.from_user.id)
     # если id клиента относится к яровому тогда возьмем Яровские цены хлеба из таблицы Хлеб и поместим их в список
     if id_klients[0] < 22:
         list_prise = bd.price_jrovoe_list()
@@ -1629,12 +1653,12 @@ async def start_command(message: types.Message):
         await message.delete()
 
     # если вы админ откроем админское меню
-    elif message.from_user.id == ADMIN:
-        print(message)
-        await bot.send_message(chat_id=message.from_user.id,  # отписываемся в личный чат
-                               text='Привет Наташа',  # пишем этот текст
-                               reply_markup=keyboard.kb_menu_admin())  # запускаем клавиатуру
-        await message.delete()
+    # elif message.from_user.id == ADMIN:
+    #     print(message)
+    #     await bot.send_message(chat_id=message.from_user.id,  # отписываемся в личный чат
+    #                            text='Привет Наташа',  # пишем этот текст
+    #                            reply_markup=keyboard.kb_menu_admin())  # запускаем клавиатуру
+    #     await message.delete()
 
     # если клиент зарегистрирован, то откроем клавиатуру клиентская
     else:
