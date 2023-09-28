@@ -225,7 +225,7 @@ async def cdm_make_application(message: types.Message):
     ind_list1 = 0
     ind_list2 = 0
     await message.answer(
-        text='_________________________________',
+        text='Начало списка____________________',
         reply_markup=keyboard.back_cart_confirm(),  # клавиатура закрывается после наж.
     )
     # await bot.delete_message(chat_id=message.chat.id, message_id=message.message_id - 1)
@@ -235,7 +235,7 @@ async def cdm_make_application(message: types.Message):
                              reply_markup=keyboard.get_iline_keyboard(ind_list2, ind_list1),
                              parse_mode="HTML")  # запускаем инлайн клавиатуру
         ind_list2 += 1
-    await message.answer(text='_________________________________')
+    await message.answer(text='Конец списка_____________________')
 
 
 # Удалить заявку
@@ -350,6 +350,93 @@ async def ikb_cd_handler(callbeck: types.CallbackQuery):
             parse_mode="HTML")
 
 
+# '+10' к заявке
+@dp.callback_query_handler(lambda callback_query: callback_query.data.startswith('10+'))
+async def ikb_cd_handler(callbeck: types.CallbackQuery):
+    id = callbeck.from_user.id
+    # проверим под каким индексом находится хлеб в списке
+    # если длина данных с кнопки не больше двух символов(первый '+')
+    if len(callbeck.data) == 4:
+        # тогда прибавляем к заказу по индексу int(callbeck.data[1]),+1 в списке заказов
+        list_aplication1[int(callbeck.data[1])] += 10
+        # затем меняем текст шапки(незнаю можно ли обойтись без этого) и перезаписываем клавиатуру
+        await callbeck.message.edit_text(text=f'<b>{list_name_brod_osnov[int(callbeck.data[3])]}</b>',
+                                         reply_markup=keyboard.get_iline_keyboard(callbeck.data[3],
+                                                                                  list_aplication1[
+                                                                                      int(callbeck.data[3])]),
+                                         parse_mode="HTML")
+
+    # если длина данных с кнопки ровна 3 символам(первый '+', второй '1')
+    elif len(callbeck.data) == 5 and int(callbeck.data[3]) == 1:
+        list_aplication1[10 + int(callbeck.data[4])] += 10
+        await callbeck.message.edit_text(
+            text=f'<b>{list_name_brod_osnov[10 + int(callbeck.data[4])]}</b>',
+            reply_markup=keyboard.get_iline_keyboard(10 + int(callbeck.data[4]),
+                                                     list_aplication1[10 + int(callbeck.data[4])]),
+            parse_mode="HTML")
+    # если длина данных с кнопки ровна 3 символам(первый '+', второй '2')
+    elif len(callbeck.data) == 5 and int(callbeck.data[3]) == 2:
+        list_aplication1[20 + int(callbeck.data[4])] += 10
+        await callbeck.message.edit_text(
+            text=f'<b>{list_name_brod_osnov[20 + int(callbeck.data[4])]}</b>',
+            reply_markup=keyboard.get_iline_keyboard(20 + int(callbeck.data[2]),
+                                                     list_aplication1[20 + int(callbeck.data[4])]),
+            parse_mode="HTML")  # пишем текст
+    # если длина данных с кнопки ровна 3 символам(первый '+', второй '3')
+    elif len(callbeck.data) == 5 and int(callbeck.data[3]) == 3:
+        list_aplication1[30 + int(callbeck.data[4])] += 10
+        await callbeck.message.edit_text(
+            text=f'<b>{list_name_brod_osnov[30 + int(callbeck.data[4])]}</b>',
+            reply_markup=keyboard.get_iline_keyboard(30 + int(callbeck.data[4]),
+                                                     list_aplication1[30 + int(callbeck.data[4])]),
+            parse_mode="HTML")  # пишем текст
+
+
+# '-10' к заявке
+@dp.callback_query_handler(lambda callback_query: callback_query.data.startswith(
+    '10-'))  # фильтруем сообщения и реагируем на сообзения начинабщиеся на '-'
+async def ikb_cd_handler(callbeck: types.CallbackQuery):
+    # если длина данных с кнопки не больше двух символов(первый '-')
+    if len(callbeck.data) == 4:
+        if list_aplication1[int(callbeck.data[3])] != 0:
+            list_aplication1[int(callbeck.data[3])] -= 10
+        await callbeck.message.edit_text(
+            text=f'<b>{list_name_brod_osnov[int(callbeck.data[3])]}</b>',
+            reply_markup=keyboard.get_iline_keyboard(callbeck.data[3],
+                                                     list_aplication1[int(callbeck.data[3])]),
+            parse_mode="HTML")
+    # если длина данных с кнопки ровна 3 символам(первый '-', второй '1')
+    elif len(callbeck.data) == 5 and int(callbeck.data[3]) == 1:
+        # если значение в списке заявок не ровно нулю тогда можно отнять 1 от заявки
+        if list_aplication1[10 + int(callbeck.data[4])] != 0:
+            list_aplication1[10 + int(callbeck.data[4])] -= 10
+        await callbeck.message.edit_text(
+            text=f'<b>{list_name_brod_osnov[10 + int(callbeck.data[4])]}</b>',
+            reply_markup=keyboard.get_iline_keyboard(10 + int(callbeck.data[4]),
+                                                     list_aplication1[10 + int(callbeck.data[4])]),
+            parse_mode="HTML")
+    # если длина данных с кнопки ровна 3 символам(первый '-', второй '2')
+    elif len(callbeck.data) == 5 and int(callbeck.data[3]) == 2:
+        if list_aplication1[20 + int(callbeck.data[4])] != 0:
+            list_aplication1[20 + int(callbeck.data[4])] -= 10
+        await callbeck.message.edit_text(
+            text=f'<b>{list_name_brod_osnov[20 + int(callbeck.data[4])]}</b>',
+            reply_markup=keyboard.get_iline_keyboard(20 + int(callbeck.data[4]),
+                                                     list_aplication1[20 + int(callbeck.data[4])]),
+            parse_mode="HTML")
+
+    # если длина данных с кнопки ровна 3 символам(первый '-', второй '3')
+    elif len(callbeck.data) == 5 and int(callbeck.data[3]) == 3:
+        if list_aplication1[30 + int(callbeck.data[4])] != 0:
+            list_aplication1[30 + int(callbeck.data[4])] -= 10
+        await callbeck.message.edit_text(
+            text=f'<b>{list_name_brod_osnov[30 + int(callbeck.data[4])]}</b>',
+            reply_markup=keyboard.get_iline_keyboard(30 + int(callbeck.data[4]),
+                                                     list_aplication1[30 + int(callbeck.data[4])]),
+            parse_mode="HTML")
+
+
+
 # 'Подтверждение заявки'
 @dp.message_handler(Text(equals='Подтвердить 💰'))
 async def reg_aplikations(message: types.Message):
@@ -401,6 +488,7 @@ async def basket(message: types.Message):
     for i in list_summ_aplication:
         summ += i
     await message.answer(text=f'Итого {summ}')
+    await message.answer(text=f'Если всё верно нажмите "Подтвердить"')
 
 
 #  Да, Нет, посмотреть старую заявку - на вопрос'перезаписать заявку'

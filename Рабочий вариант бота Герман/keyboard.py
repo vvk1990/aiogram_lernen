@@ -41,10 +41,12 @@ def kb_menu():
 
 # Клиент - инлайн клавиатура +,-,= к заявке
 def get_iline_keyboard(ind_lis, result) -> InlineKeyboardMarkup:
-    ikb = InlineKeyboardMarkup(row_width=3, inline_keyboard=[
+    ikb = InlineKeyboardMarkup(row_width=5, inline_keyboard=[
         [InlineKeyboardButton('-', callback_data=f'-{ind_lis}'),
          InlineKeyboardButton('+', callback_data=f'+{ind_lis}'),
-         InlineKeyboardButton(f'= {result} шт.', callback_data=f'{result}')]
+         InlineKeyboardButton(f'= {result} шт.', callback_data=f'{result}')],
+        [InlineKeyboardButton('-10', callback_data=f'10-{ind_lis}'),
+         InlineKeyboardButton('+10', callback_data=f'10+{ind_lis}')]
     ])
 
     return ikb
