@@ -2,6 +2,30 @@ import sqlite3 as sq
 import datetime
 
 
+# # Создадим функцию вывода Прайса
+def price():
+    conn = sq.connect('Works.db')
+    cur = conn.cursor()
+    cur.execute('''select ХлебID, Имя, Вес, Цена, Цена_Славгород, Фото  from Brod ''')
+    data_clients = []
+    data_clients2 = []
+    for i in cur.fetchall():
+        data_clients.append(i)
+    conn.close()
+    return data_clients
+
+# Список названия хлеба
+def price_name():
+    conn = sq.connect('Works.db')
+    cur = conn.cursor()
+    cur.execute('''select  Имя  from Brod ''')
+    data_clients = []
+    for i in cur.fetchall():
+        for ii in i:
+            data_clients.append(ii)
+    conn.close()
+    return data_clients
+
 # Создадим функцию вывода Прайса для Ярового из bd
 def price_jrovoe():
     conn = sq.connect('Works.db')
@@ -39,7 +63,7 @@ def price_jrovoe_list():
     return list_prise
 
 
-# Создадим функцию вывода списка цен Ярового
+# Создадим функцию вывода списка цен Славгород
 def price_slavgorod_list():
     conn = sq.connect('Works.db')
     cur = conn.cursor()
