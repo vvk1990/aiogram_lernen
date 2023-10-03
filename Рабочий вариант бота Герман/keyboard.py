@@ -103,6 +103,8 @@ def kb_menu_admin():
     kb.add(KeyboardButton('Постоянные заявки 📧'))
     kb.add(KeyboardButton('Клиенты 👤'))
     kb.add(KeyboardButton('Хлеб 🍞'))
+    kb.add(KeyboardButton('Итог(распечатка рассылка)'))
+
 
     return kb
 

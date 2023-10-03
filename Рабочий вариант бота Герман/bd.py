@@ -38,6 +38,7 @@ def price_jrovoe():
     return data_clients
 
 
+
 # Создадим функцию вывода Прайса для Славгорода из bd
 def price_slavgorod():
     conn = sq.connect('Works.db')
@@ -627,8 +628,9 @@ def del_applications(id_client):
 def add_clients(list_clients):
     conn = sq.connect('Works.db')
     cur = conn.cursor()
-    cur.execute('''insert into Clients(Name, Phone_number, Address, Name_shop)
-                   values(?, ?, ?, ?)''', (list_clients[0], list_clients[1], list_clients[2], list_clients[3]))
+    cur.execute('''insert into Clients(Name, Phone_number, Address, Name_shop, Город, Проводка )
+                   values(?, ?, ?, ?, ?, ?)''', (list_clients[0], list_clients[1], list_clients[2], list_clients[3],
+                                                 list_clients[4], list_clients[5]))
     conn.commit()
     conn.close()
     return True
@@ -654,9 +656,12 @@ def change_clients(list_clients):
     cur.execute(f'''UPDATE Clients set Name = ?,
                                        Phone_number = ?,
                                        Address = ?,
-                                       Name_shop = ?
+                                       Name_shop = ?,
+                                       Город = ?,
+                                       Проводка = ?
                                        where ClientsID == ?''',
-                (list_clients[1], list_clients[2], list_clients[3], list_clients[4], list_clients[0]))
+                (list_clients[1], list_clients[2], list_clients[3], list_clients[4], list_clients[6],
+                 list_clients[6], list_clients[0]))
     conn.commit()
     conn.close()
 
@@ -725,3 +730,112 @@ def del_brod(id_brod):
     conn.commit()
     conn.close()
     return True
+
+# финиш - помещаем постоянные заявки(нужного нам дня) в список для добавления их в заявку завтрашнего дня
+def add_permanent_app():
+    # получаем сегодняшнюю дату
+    date_today = datetime.datetime.today()
+    # получаем завтрешнюю дату
+    date_tomorrow = date_today + datetime.timedelta(days=1)
+    # создаём переменную с завтрешней датой в удобном формате
+    name_table_application = date_tomorrow.strftime('day_%d_%m_%y')
+    # создаём переменную и присваиваем ей название сегоднешнего дня недели
+    weekday = datetime.datetime.today().strftime('%A')
+
+    conn = sq.connect('Works.db')
+    cur = conn.cursor()
+    x = []
+    # если сегодня понедельник, запишем в список все постоянные заявки понедельника
+    if weekday == 'Monday':
+        cur.execute('''select * from Вторник''')
+        x = cur.fetchall()
+    # если сегодня вторник, запишем в список все постоянные заявки вторника
+    if weekday == 'Tuesday':
+        cur.execute('''select * from Среда''')
+        x = cur.fetchall()
+    # если сегодня среда, запишем в список все постоянные заявки среды
+    if weekday == 'Wednesday':
+        cur.execute('''select * from Четверг''')
+        x = cur.fetchall()
+    # если сегодня четверг, запишем в список все постоянные заявки четверга
+    if weekday == 'Thursday':
+        cur.execute('''select * from Пятница''')
+        x = cur.fetchall()
+    # если сегодня пятница, запишем в список все постоянные заявки пятницы
+    if weekday == 'Friday':
+        cur.execute('''select * from Суббота''')
+        x = cur.fetchall()
+    # если сегодня воскресенье, запишем в список все постоянные заявки субботы
+    if weekday == 'Sunday':
+        cur.execute('''select * from Понедельник''')
+        x = cur.fetchall()
+    # запишем заявки из нашего списка в таблицу заявок завтрешнего дня
+    # если их там ещё нет
+    # для этого запишем в список id клиентов из таблицы заявок
+    conn = sq.connect('Works.db')
+    cur = conn.cursor()
+    cur.execute(f'''select ClientsID from {name_table_application}''')
+    id_client = []
+    for i in cur.fetchall():
+        for c in i:
+            id_client.append(c)
+    # если в нашем списке нет клиента с таким id, то внесем его в таблицу заявок
+    for list_application in x:
+        if list_application[0] not in id_client:
+            cur.execute(f'''insert into {name_table_application} (
+                                                                       ClientsID,
+                                                                       Name_Clients,
+                                                                       Батон_Сдобный,
+                                                                       Батон_Французский,
+                                                                       Хлеб_Богатырский_отрубной,
+                                                                       Хлеб_Богатырский_отрубной_круглый,
+                                                                       Хлеб_Дарк_8_злаков,
+                                                                       Хлеб_Классический_075,
+                                                                       Хлеб_Классический_050,
+                                                                       Хлеб_Классический_035,
+                                                                       Хлеб_Купеческий_заварной_с_изюмом,
+                                                                       Хлеб_Купеческий_заварной_с_тмином,
+                                                                       Хлеб_Овсяный,
+                                                                       Хлеб_Степной,
+                                                                       Хлеб_Тостовый,
+                                                                       Хлеб_Чиабатта,
+                                                                       Хлеб_Яровской_ржаной,
+                                                                       Булочка_К_чаю,
+                                                                       Булочка_С_корицей,
+                                                                       Булочка_С_корицей_и_кремом,
+                                                                       Булочка_С_чесноком,
+                                                                       Булочка_С_кунжутом_для_гамбургера,
+                                                                       Булочка_Сдобная_для_хот_дога,
+                                                                       Плетёнка_с_маком,
+                                                                       Плюшка,
+                                                                       Растегай,
+                                                                       Рогалик,
+                                                                       Рулет_с_маком,
+                                                                       Тесто_Пирожковое_охлажденное,
+                                                                       Пряники,
+                                                                       Ватрушка_с_творогом,
+                       Ватрушка_с_сыром,
+                       Ватрушка_с_конфитюром,
+                       Беляш_печеный,
+                       Кекс_классический,
+                       Кекс_шоколадный,
+                       Кулебяка,
+                       Пирог_с_капустой,
+                       Пирог_с_яблоками,
+                       Пицца_мини,
+                       Ромовая_баба,
+                       Сосиска_в_тесте)
+            values(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)''',
+                        (list_application[0], list_application[1], list_application[2]
+                         , list_application[3], list_application[4], list_application[5], list_application[6]
+                         , list_application[7], list_application[8], list_application[9], list_application[10]
+                         , list_application[11], list_application[12], list_application[13], list_application[14]
+                         , list_application[15], list_application[16], list_application[17], list_application[18]
+                         , list_application[19], list_application[20], list_application[21], list_application[22]
+                         , list_application[23], list_application[24], list_application[25], list_application[26]
+                         , list_application[27], list_application[28], list_application[29], list_application[30]
+                         , list_application[31], list_application[32], list_application[33], list_application[34]
+                         , list_application[35], list_application[36], list_application[37], list_application[38]
+                         , list_application[39], list_application[40], list_application[41]))
+
+            conn.commit()

@@ -18,6 +18,8 @@ class FSMAdmin_Clients(StatesGroup):
     Phone_number = State()
     Address = State()
     Name_shop = State()
+    Citi = State()
+    Wiring = State()
     Confirmation = State()
 
 
@@ -28,6 +30,8 @@ class FSMAdmin_Clients_change(StatesGroup):
     Phone_number = State()
     Address = State()
     Name_shop = State()
+    Citi = State()
+    Wiring = State()
     Confirmation = State()
 
 
@@ -35,7 +39,6 @@ class FSMAdmin_Clients_change(StatesGroup):
 class FSMAdmin_applications_add(StatesGroup):
     Id = State()
     Confirmation = State()
-
 
 
 # FSM для удаления ЗАЯВКИ
@@ -175,9 +178,15 @@ for brod in list_brod:
 #                         '"Пицца_мини"______________',
 #                         '"Ромовая баба"____________',
 #                         '"Сосиска в тесте"_________'
+#
+#
 #                         ]
-list_aplication1 = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                    0, 0, 0, 0, 0, 0, 0]
+
+# зайдем в bd  и вытызим список хлеба (нужна длина списка)
+list_application1 = [0] * len(bd.price_name())
+
+# list_aplication1 = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+#                     0, 0, 0, 0, 0, 0, 0]
 
 ADMIN = 1914231330
 
@@ -193,9 +202,9 @@ async def on_startup(_):
 # функция очистки переменных списков
 def clear_list_app():
     # восстанавливаем значение списка заявок в первоначальное состояние
-    if len(list_aplication1) > 0:
-        for ind in range(0, len(list_aplication1)):
-            list_aplication1[ind] = 0
+    if len(list_application1) > 0:
+        for ind in range(0, len(list_application1)):
+            list_application1[ind] = 0
 
     # и очистим за собой это список чтобы можно было еще делать заявку
     if len(id_and_name_clients) > 0:
@@ -233,7 +242,7 @@ async def cdm_make_application(message: types.Message):
     for brod in list_name_brod_osnov:
         await message.answer(text=f'<b>{brod}</b>',  # пишем текст
                              reply_markup=keyboard.get_iline_keyboard(ind_list2, ind_list1),
-                             parse_mode="HTML")  # запускаем инлайн клавиатуру
+                             parse_mode="HTML")  # запускаем ин лайн клавиатуру
         ind_list2 += 1
     await message.answer(text='Конец списка_____________________')
 
@@ -266,87 +275,85 @@ async def del_application(message: types.Message):
 
 # '+' к заявке
 @dp.callback_query_handler(lambda callback_query: callback_query.data.startswith('+'))
-async def ikb_cd_handler(callbeck: types.CallbackQuery):
-    id = callbeck.from_user.id
+async def ikb_cd_handler(callback: types.CallbackQuery):
     # проверим под каким индексом находится хлеб в списке
     # если длина данных с кнопки не больше двух символов(первый '+')
-    if len(callbeck.data) == 2:
+    if len(callback.data) == 2:
         # тогда прибавляем к заказу по индексу int(callbeck.data[1]),+1 в списке заказов
-        list_aplication1[int(callbeck.data[1])] += 1
+        list_application1[int(callback.data[1])] += 1
         # затем меняем текст шапки(незнаю можно ли обойтись без этого) и перезаписываем клавиатуру
-        await callbeck.message.edit_text(text=f'<b>{list_name_brod_osnov[int(callbeck.data[1])]}</b>',
-                                         reply_markup=keyboard.get_iline_keyboard(callbeck.data[1],
-                                                                                  list_aplication1[
-                                                                                      int(callbeck.data[1])]),
+        await callback.message.edit_text(text=f'<b>{list_name_brod_osnov[int(callback.data[1])]}</b>',
+                                         reply_markup=keyboard.get_iline_keyboard(callback.data[1],
+                                                                                  list_application1[
+                                                                                      int(callback.data[1])]),
                                          parse_mode="HTML")
 
     # если длина данных с кнопки ровна 3 символам(первый '+', второй '1')
-    elif len(callbeck.data) == 3 and int(callbeck.data[1]) == 1:
-        list_aplication1[10 + int(callbeck.data[2])] += 1
-        await callbeck.message.edit_text(
-            text=f'<b>{list_name_brod_osnov[10 + int(callbeck.data[2])]}</b>',
-            reply_markup=keyboard.get_iline_keyboard(10 + int(callbeck.data[2]),
-                                                     list_aplication1[10 + int(callbeck.data[2])]),
+    elif len(callback.data) == 3 and int(callback.data[1]) == 1:
+        list_application1[10 + int(callback.data[2])] += 1
+        await callback.message.edit_text(
+            text=f'<b>{list_name_brod_osnov[10 + int(callback.data[2])]}</b>',
+            reply_markup=keyboard.get_iline_keyboard(10 + int(callback.data[2]),
+                                                     list_application1[10 + int(callback.data[2])]),
             parse_mode="HTML")
     # если длина данных с кнопки ровна 3 символам(первый '+', второй '2')
-    elif len(callbeck.data) == 3 and int(callbeck.data[1]) == 2:
-        list_aplication1[20 + int(callbeck.data[2])] += 1
-        await callbeck.message.edit_text(
-            text=f'<b>{list_name_brod_osnov[20 + int(callbeck.data[2])]}</b>',
-            reply_markup=keyboard.get_iline_keyboard(20 + int(callbeck.data[2]),
-                                                     list_aplication1[20 + int(callbeck.data[2])]),
+    elif len(callback.data) == 3 and int(callback.data[1]) == 2:
+        list_application1[20 + int(callback.data[2])] += 1
+        await callback.message.edit_text(
+            text=f'<b>{list_name_brod_osnov[20 + int(callback.data[2])]}</b>',
+            reply_markup=keyboard.get_iline_keyboard(20 + int(callback.data[2]),
+                                                     list_application1[20 + int(callback.data[2])]),
             parse_mode="HTML")  # пишем текст
     # если длина данных с кнопки ровна 3 символам(первый '+', второй '3')
-    elif len(callbeck.data) == 3 and int(callbeck.data[1]) == 3:
-        list_aplication1[30 + int(callbeck.data[2])] += 1
-        await callbeck.message.edit_text(
-            text=f'<b>{list_name_brod_osnov[30 + int(callbeck.data[2])]}</b>',
-            reply_markup=keyboard.get_iline_keyboard(30 + int(callbeck.data[2]),
-                                                     list_aplication1[30 + int(callbeck.data[2])]),
+    elif len(callback.data) == 3 and int(callback.data[1]) == 3:
+        list_application1[30 + int(callback.data[2])] += 1
+        await callback.message.edit_text(
+            text=f'<b>{list_name_brod_osnov[30 + int(callback.data[2])]}</b>',
+            reply_markup=keyboard.get_iline_keyboard(30 + int(callback.data[2]),
+                                                     list_application1[30 + int(callback.data[2])]),
             parse_mode="HTML")  # пишем текст
 
 
 # '-' к заявке
-@dp.callback_query_handler(lambda callback_query: callback_query.data.startswith(
-    '-'))  # фильтруем сообщения и реагируем на сообзения начинабщиеся на '-'
+@dp.callback_query_handler(lambda callback_query: callback_query.data.startswith('-'))
 async def ikb_cd_handler(callbeck: types.CallbackQuery):
     # если длина данных с кнопки не больше двух символов(первый '-')
     if len(callbeck.data) == 2:
-        if list_aplication1[int(callbeck.data[1])] != 0:
-            list_aplication1[int(callbeck.data[1])] -= 1
+        if list_application1[int(callbeck.data[1])] != 0:
+            list_application1[int(callbeck.data[1])] -= 1
         await callbeck.message.edit_text(
             text=f'<b>{list_name_brod_osnov[int(callbeck.data[1])]}</b>',
             reply_markup=keyboard.get_iline_keyboard(callbeck.data[1],
-                                                     list_aplication1[int(callbeck.data[1])]),
+                                                     list_application1[int(callbeck.data[1])]),
             parse_mode="HTML")
     # если длина данных с кнопки ровна 3 символам(первый '-', второй '1')
     elif len(callbeck.data) == 3 and int(callbeck.data[1]) == 1:
         # если значение в списке заявок не ровно нулю тогда можно отнять 1 от заявки
-        if list_aplication1[10 + int(callbeck.data[2])] != 0:
-            list_aplication1[10 + int(callbeck.data[2])] -= 1
+        if list_application1[10 + int(callbeck.data[2])] != 0:
+            list_application1[10 + int(callbeck.data[2])] -= 1
         await callbeck.message.edit_text(
             text=f'<b>{list_name_brod_osnov[10 + int(callbeck.data[2])]}</b>',
             reply_markup=keyboard.get_iline_keyboard(10 + int(callbeck.data[2]),
-                                                     list_aplication1[10 + int(callbeck.data[2])]),
+                                                     list_application1[10 + int(callbeck.data[2])]),
             parse_mode="HTML")
     # если длина данных с кнопки ровна 3 символам(первый '-', второй '2')
     elif len(callbeck.data) == 3 and int(callbeck.data[1]) == 2:
-        if list_aplication1[20 + int(callbeck.data[2])] != 0:
-            list_aplication1[20 + int(callbeck.data[2])] -= 1
+        if list_application1[20 + int(callbeck.data[2])] != 0:
+            list_application1[20 + int(callbeck.data[2])] -= 1
         await callbeck.message.edit_text(
             text=f'<b>{list_name_brod_osnov[20 + int(callbeck.data[2])]}</b>',
             reply_markup=keyboard.get_iline_keyboard(20 + int(callbeck.data[2]),
-                                                     list_aplication1[20 + int(callbeck.data[2])]),
+                                                     list_application1[20 + int(callbeck.data[2])]),
             parse_mode="HTML")
 
     # если длина данных с кнопки ровна 3 символам(первый '-', второй '3')
     elif len(callbeck.data) == 3 and int(callbeck.data[1]) == 3:
-        if list_aplication1[30 + int(callbeck.data[2])] != 0:
-            list_aplication1[30 + int(callbeck.data[2])] -= 1
+        if list_application1[30 + int(callbeck.data[2])] != 0:
+            list_application1[30 + int(callbeck.data[2])] -= 1
         await callbeck.message.edit_text(
             text=f'<b>{list_name_brod_osnov[30 + int(callbeck.data[2])]}</b>',
             reply_markup=keyboard.get_iline_keyboard(30 + int(callbeck.data[2]),
-                                                     list_aplication1[30 + int(callbeck.data[2])]),
+                                                     list_application1[30 + int(callbeck.data[2])]),
             parse_mode="HTML")
 
 
@@ -358,83 +365,81 @@ async def ikb_cd_handler(callbeck: types.CallbackQuery):
     # если длина данных с кнопки не больше двух символов(первый '+')
     if len(callbeck.data) == 4:
         # тогда прибавляем к заказу по индексу int(callbeck.data[1]),+1 в списке заказов
-        list_aplication1[int(callbeck.data[1])] += 10
+        list_application1[int(callbeck.data[1])] += 10
         # затем меняем текст шапки(незнаю можно ли обойтись без этого) и перезаписываем клавиатуру
         await callbeck.message.edit_text(text=f'<b>{list_name_brod_osnov[int(callbeck.data[3])]}</b>',
                                          reply_markup=keyboard.get_iline_keyboard(callbeck.data[3],
-                                                                                  list_aplication1[
+                                                                                  list_application1[
                                                                                       int(callbeck.data[3])]),
                                          parse_mode="HTML")
 
     # если длина данных с кнопки ровна 3 символам(первый '+', второй '1')
     elif len(callbeck.data) == 5 and int(callbeck.data[3]) == 1:
-        list_aplication1[10 + int(callbeck.data[4])] += 10
+        list_application1[10 + int(callbeck.data[4])] += 10
         await callbeck.message.edit_text(
             text=f'<b>{list_name_brod_osnov[10 + int(callbeck.data[4])]}</b>',
             reply_markup=keyboard.get_iline_keyboard(10 + int(callbeck.data[4]),
-                                                     list_aplication1[10 + int(callbeck.data[4])]),
+                                                     list_application1[10 + int(callbeck.data[4])]),
             parse_mode="HTML")
     # если длина данных с кнопки ровна 3 символам(первый '+', второй '2')
     elif len(callbeck.data) == 5 and int(callbeck.data[3]) == 2:
-        list_aplication1[20 + int(callbeck.data[4])] += 10
+        list_application1[20 + int(callbeck.data[4])] += 10
         await callbeck.message.edit_text(
             text=f'<b>{list_name_brod_osnov[20 + int(callbeck.data[4])]}</b>',
             reply_markup=keyboard.get_iline_keyboard(20 + int(callbeck.data[2]),
-                                                     list_aplication1[20 + int(callbeck.data[4])]),
+                                                     list_application1[20 + int(callbeck.data[4])]),
             parse_mode="HTML")  # пишем текст
     # если длина данных с кнопки ровна 3 символам(первый '+', второй '3')
     elif len(callbeck.data) == 5 and int(callbeck.data[3]) == 3:
-        list_aplication1[30 + int(callbeck.data[4])] += 10
+        list_application1[30 + int(callbeck.data[4])] += 10
         await callbeck.message.edit_text(
             text=f'<b>{list_name_brod_osnov[30 + int(callbeck.data[4])]}</b>',
             reply_markup=keyboard.get_iline_keyboard(30 + int(callbeck.data[4]),
-                                                     list_aplication1[30 + int(callbeck.data[4])]),
+                                                     list_application1[30 + int(callbeck.data[4])]),
             parse_mode="HTML")  # пишем текст
 
 
 # '-10' к заявке
-@dp.callback_query_handler(lambda callback_query: callback_query.data.startswith(
-    '10-'))  # фильтруем сообщения и реагируем на сообзения начинабщиеся на '-'
+@dp.callback_query_handler(lambda callback_query: callback_query.data.startswith('10-'))
 async def ikb_cd_handler(callbeck: types.CallbackQuery):
     # если длина данных с кнопки не больше двух символов(первый '-')
     if len(callbeck.data) == 4:
-        if list_aplication1[int(callbeck.data[3])] != 0:
-            list_aplication1[int(callbeck.data[3])] -= 10
+        if list_application1[int(callbeck.data[3])] != 0:
+            list_application1[int(callbeck.data[3])] -= 10
         await callbeck.message.edit_text(
             text=f'<b>{list_name_brod_osnov[int(callbeck.data[3])]}</b>',
             reply_markup=keyboard.get_iline_keyboard(callbeck.data[3],
-                                                     list_aplication1[int(callbeck.data[3])]),
+                                                     list_application1[int(callbeck.data[3])]),
             parse_mode="HTML")
     # если длина данных с кнопки ровна 3 символам(первый '-', второй '1')
     elif len(callbeck.data) == 5 and int(callbeck.data[3]) == 1:
         # если значение в списке заявок не ровно нулю тогда можно отнять 1 от заявки
-        if list_aplication1[10 + int(callbeck.data[4])] != 0:
-            list_aplication1[10 + int(callbeck.data[4])] -= 10
+        if list_application1[10 + int(callbeck.data[4])] != 0:
+            list_application1[10 + int(callbeck.data[4])] -= 10
         await callbeck.message.edit_text(
             text=f'<b>{list_name_brod_osnov[10 + int(callbeck.data[4])]}</b>',
             reply_markup=keyboard.get_iline_keyboard(10 + int(callbeck.data[4]),
-                                                     list_aplication1[10 + int(callbeck.data[4])]),
+                                                     list_application1[10 + int(callbeck.data[4])]),
             parse_mode="HTML")
     # если длина данных с кнопки ровна 3 символам(первый '-', второй '2')
     elif len(callbeck.data) == 5 and int(callbeck.data[3]) == 2:
-        if list_aplication1[20 + int(callbeck.data[4])] != 0:
-            list_aplication1[20 + int(callbeck.data[4])] -= 10
+        if list_application1[20 + int(callbeck.data[4])] != 0:
+            list_application1[20 + int(callbeck.data[4])] -= 10
         await callbeck.message.edit_text(
             text=f'<b>{list_name_brod_osnov[20 + int(callbeck.data[4])]}</b>',
             reply_markup=keyboard.get_iline_keyboard(20 + int(callbeck.data[4]),
-                                                     list_aplication1[20 + int(callbeck.data[4])]),
+                                                     list_application1[20 + int(callbeck.data[4])]),
             parse_mode="HTML")
 
     # если длина данных с кнопки ровна 3 символам(первый '-', второй '3')
     elif len(callbeck.data) == 5 and int(callbeck.data[3]) == 3:
-        if list_aplication1[30 + int(callbeck.data[4])] != 0:
-            list_aplication1[30 + int(callbeck.data[4])] -= 10
+        if list_application1[30 + int(callbeck.data[4])] != 0:
+            list_application1[30 + int(callbeck.data[4])] -= 10
         await callbeck.message.edit_text(
             text=f'<b>{list_name_brod_osnov[30 + int(callbeck.data[4])]}</b>',
             reply_markup=keyboard.get_iline_keyboard(30 + int(callbeck.data[4]),
-                                                     list_aplication1[30 + int(callbeck.data[4])]),
+                                                     list_application1[30 + int(callbeck.data[4])]),
             parse_mode="HTML")
-
 
 
 # 'Подтверждение заявки'
@@ -446,13 +451,13 @@ async def reg_aplikations(message: types.Message):
     name_clients = bd.name_and_id_clients(message.from_user.id)[1]
 
     # создадим таблицу для основной заявки если её ещё нет в bd
-    result_create_aplication = bd.create_request_table(id_clients, name_clients, list_aplication1)
+    result_create_aplication = bd.create_request_table(id_clients, name_clients, list_application1)
     if result_create_aplication == True:
         await message.answer(text=f'Вы успешно зарегистрировали заявку для:\n{name_clients}',
                              reply_markup=keyboard.kb_menu())
         # восстанавливаем значение списка заявок в первоначальное состояние
-        for ind in range(0, len(list_aplication1)):
-            list_aplication1[ind] = 0
+        for ind in range(0, len(list_application1)):
+            list_application1[ind] = 0
     else:
         await message.answer(text=f'Для "{name_clients}" уже создана заявка')
         await message.answer(text='Перезаписать?',
@@ -478,7 +483,7 @@ async def basket(message: types.Message):
     ind = 0
     list_summ_aplication = []
     # пройдемся по списку заявки и где она есть перемножим с ценой и поместим это значение в список для подсчета
-    for i in list_aplication1:
+    for i in list_application1:
         if i > 0:
             await message.answer(
                 text=f'{list_name_brod_osnov[ind]} - {i}шт * {list_prise[ind]} = {i * list_prise[ind]} рублей')
@@ -492,8 +497,7 @@ async def basket(message: types.Message):
 
 
 #  Да, Нет, посмотреть старую заявку - на вопрос'перезаписать заявку'
-@dp.callback_query_handler(lambda callback_query: callback_query.data.startswith(
-    '!'))
+@dp.callback_query_handler(lambda callback_query: callback_query.data.startswith('!'))
 async def ikb_cd_handler(callback: types.CallbackQuery):
     # получим имя клиента и его индекс
     id_clients = bd.name_and_id_clients(callback.from_user.id)[0]
@@ -501,12 +505,12 @@ async def ikb_cd_handler(callback: types.CallbackQuery):
     # если ответили 'Да'
     if callback.data[1] == 'Д':
         # зайдем в bd и исправим заявку
-        bd.change_old_aplikation(id_clients, list_aplication1)
+        bd.change_old_aplikation(id_clients, list_application1)
         await callback.message.answer(text='Вы успешно перезаписали заявку!',
                                       reply_markup=keyboard.kb_menu())
         # востонавливаем значение списка заявок в первоначальное состаяние
-        for ind in range(0, len(list_aplication1)):
-            list_aplication1[ind] = 0
+        for ind in range(0, len(list_application1)):
+            list_application1[ind] = 0
 
     # если ответили нет
     elif callback.data[1] == 'Н':
@@ -514,8 +518,8 @@ async def ikb_cd_handler(callback: types.CallbackQuery):
                                       reply_markup=keyboard.kb_menu())
 
         # востонавливаем значение списка заявок в первоначальное состаяние
-        for ind in range(0, len(list_aplication1)):
-            list_aplication1[ind] = 0
+        for ind in range(0, len(list_application1)):
+            list_application1[ind] = 0
 
     # если ответили - посмотреть старую заявку
     elif callback.data[1] == 'С':
@@ -665,7 +669,6 @@ async def reg(message: types.Message):
     await message.answer(text='Ждем ваших заявок!☎️🍪😁')
 
 
-
 # этот хендлер обрабатывает только фразу 'Оставить отзыв и предложения 💌''
 @dp.message_handler(Text(equals='Оставить отзыв и предложения 💌'))
 async def reg(message: types.Message):
@@ -767,7 +770,7 @@ async def reg_applikations(message: types.Message):
         id_and_name_clients2.append(i)
 
     # создадим таблицу для основной заявки если её ещё нет в bd
-    result_create_aplication = bd.create_request_table(id_clients, name_clients, list_aplication1)
+    result_create_aplication = bd.create_request_table(id_clients, name_clients, list_application1)
     if result_create_aplication == True:
         await message.answer(text=f'Вы успешно зарегистрировали заявку для:\n{name_clients}',
                              reply_markup=keyboard.kb_menu_admin())
@@ -791,7 +794,7 @@ async def yes_no_look(callback: types.CallbackQuery):
     # если ответили 'Да'
     if callback.data[1] == 'Д':
         # зайдем в bd и исправим заявку
-        bd.change_old_aplikation(id_clients, list_aplication1)
+        bd.change_old_aplikation(id_clients, list_application1)
         await callback.message.answer(text='Вы успешно перезаписали заявку!',
                                       reply_markup=keyboard.kb_menu_admin())
 
@@ -860,7 +863,7 @@ async def basket(message: types.Message):
     ind = 0
     list_summ_aplication = []
     # пройдемся по списку заявки и где она есть перемножим с ценой и поместим это значение в список для подсчета
-    for i in list_aplication1:
+    for i in list_application1:
         if i > 0:
             await message.answer(
                 text=f'{list_name_brod_osnov[ind]} - {i}шт * {list_prise[ind]} = {i * list_prise[ind]} рублей')
@@ -998,7 +1001,7 @@ async def get_application(callback: types.CallbackQuery):
         # запишим значения старой заявки в list_applications1
         ind = 0
         for x in list_permanent_applications:
-            list_aplication1.insert(ind, x)
+            list_application1.insert(ind, x)
             ind += 1
 
         ind_list1 = 0
@@ -1006,7 +1009,7 @@ async def get_application(callback: types.CallbackQuery):
         for brod in list_name_brod_osnov:
             await callback.message.answer(text=f'<b>{brod}</b>',  # пишем текст
                                           reply_markup=keyboard.get_iline_keyboard(ind_list2,
-                                                                                   list_aplication1[ind_list1]),
+                                                                                   list_application1[ind_list1]),
                                           parse_mode="HTML")  # запускаем инлайн клавиатуру
             ind_list2 += 1
             ind_list1 += 1
@@ -1024,7 +1027,7 @@ async def admin_application(message: types.Message):
     name_table = CLIENTS['name_table']
 
     # запишем нашу постоянную заявку в bd
-    result_create_application = bd.save_permanent_applications(id_clients, name_clients, list_aplication1, name_table)
+    result_create_application = bd.save_permanent_applications(id_clients, name_clients, list_application1, name_table)
     if result_create_application == True:
         await message.answer(text=f'Вы успешно зарегистрировали постоянную заявку для:\n{name_clients}\n'
                                   f'в(во): {name_table}',
@@ -1033,6 +1036,8 @@ async def admin_application(message: types.Message):
         clear_list_app()
     # очистим словарь
     CLIENTS.clear()
+
+
 # 'Постоянные заявки' - Удалить
 @dp.message_handler(Text(equals='Удалить 🚮'))
 async def add_application(message: types.Message):
@@ -1052,14 +1057,14 @@ async def add_application(message: types.Message):
 
     await FSMAdmin_constant_applications_del.Id.set()
 
+
 # 'Постоянные заявки'- Удалить - ловим ID клиента, чтобы удалить его
 @dp.message_handler(state=FSMAdmin_constant_applications_del.Id)
-async def get_days_of_week(message: types.Message, state=FSMContext):
+async def get_days_of_week(message: types.Message, state: FSMContext):
     async with state.proxy() as data:
         CLIENTS['id'] = int(message.text)
     # возьмем id из нашего сообщения и найдем по нему имя из bd
     CLIENTS['name_clients'] = bd.name_clients(CLIENTS['id'])
-
 
     # выводим инлайн клавиатуру с днями недели
     await message.answer(text='Выберете день недели 🗓',
@@ -1087,6 +1092,7 @@ async def get_aplication(callback: types.CallbackQuery):
     # очистим наши вспомогательные списки
     clear_list_app()
     CLIENTS.clear()
+
 
 # menu 'КЛИЕНТЫ'
 @dp.message_handler(Text(equals='Клиенты 👤'))
@@ -1117,7 +1123,7 @@ async def cmd_cancel(message: types.Message, state: FSMContext):
 
 # МАШИНА СОСТОЯНИЙ - добавление клиента ############
 @dp.message_handler(state=FSMAdmin_Clients.Name)
-async def load_name(message: types.Message, state: FSMContext):
+async def add_name(message: types.Message, state: FSMContext):
     async with state.proxy() as data:
         data['name'] = message.text
 
@@ -1126,7 +1132,7 @@ async def load_name(message: types.Message, state: FSMContext):
 
 
 @dp.message_handler(state=FSMAdmin_Clients.Phone_number)
-async def load_photo(message: types.Message, state: FSMContext):
+async def add_phone_number(message: types.Message, state: FSMContext):
     async with state.proxy() as data:
         data['Phone_number'] = message.text
     await FSMAdmin_Clients.next()
@@ -1134,7 +1140,7 @@ async def load_photo(message: types.Message, state: FSMContext):
 
 
 @dp.message_handler(state=FSMAdmin_Clients.Address)
-async def load_photo(message: types.Message, state: FSMContext):
+async def add_address(message: types.Message, state: FSMContext):
     async with state.proxy() as data:
         data['Address'] = message.text
     await FSMAdmin_Clients.next()
@@ -1142,9 +1148,27 @@ async def load_photo(message: types.Message, state: FSMContext):
 
 
 @dp.message_handler(state=FSMAdmin_Clients.Name_shop)
-async def load_photo(message: types.Message, state: FSMContext):
+async def add_name_shop(message: types.Message, state: FSMContext):
     async with state.proxy() as data:
         data['Name_shop'] = message.text
+
+    await FSMAdmin_Clients.next()
+    await message.answer('Введите город:(Яровое, Славгород)')
+
+
+@dp.message_handler(state=FSMAdmin_Clients.Citi)
+async def add_citi(message: types.Message, state: FSMContext):
+    async with state.proxy() as data:
+        data['Citi'] = message.text
+
+    await FSMAdmin_Clients.next()
+    await message.answer('Введите статус:(п или н')
+
+
+@dp.message_handler(state=FSMAdmin_Clients.Wiring)
+async def add_wiring(message: types.Message, state: FSMContext):
+    async with state.proxy() as data:
+        data['Wiring'] = message.text
 
     await FSMAdmin_Clients.next()
     await message.answer(f'Проверьте данные:\n'
@@ -1152,6 +1176,8 @@ async def load_photo(message: types.Message, state: FSMContext):
                          f'номер телефона: {data["Phone_number"]}\n'
                          f'адрес: {data["Address"]}\n'
                          f'название магазина : {data["Name_shop"]}\n'
+                         f'город: {data["Citi"]}\n'
+                         f'статус: {data["Wiring"]}'
                          f'\n'
                          f'Если всё верно нажмите "Подтвердить"')
 
@@ -1160,7 +1186,8 @@ async def load_photo(message: types.Message, state: FSMContext):
 @dp.message_handler(commands=['Подтвердить'], state=FSMAdmin_Clients.Confirmation)
 async def cmd_cancel(message: types.Message, state: FSMContext):
     async with state.proxy() as data:
-        list_clients = [data['name'], data['Phone_number'], data['Address'], data['Name_shop']]
+        list_clients = [data['name'], data['Phone_number'], data['Address'], data['Name_shop'], data['Citi'],
+                        data['Wiring']]
 
     # записать в bd
     result = bd.add_clients(list_clients)
@@ -1169,8 +1196,6 @@ async def cmd_cancel(message: types.Message, state: FSMContext):
         await state.finish()
         await message.reply('Вы успешно добавили нового клиента!',
                             reply_markup=keyboard.kb_menu_admin())
-
-
 
 
 # КЛИЕНТЫ - ИЗМЕНИТЬ
@@ -1206,7 +1231,8 @@ async def load_name(message: types.Message, state: FSMContext):
     # Поместим в наш словарь изначальные данные
     global CLIENTS
     CLIENTS = {'id': int(message.text), 'name': list_clients[1], 'phone_number': list_clients[2],
-               'address': list_clients[3], 'name_shop': list_clients[4]}
+               'address': list_clients[3], 'name_shop': list_clients[4], 'citi': list_clients[5],
+               'wiring': list_clients[6]}
 
     await message.answer(f'Наименование: {list_clients[1]}',
                          reply_markup=keyboard.get_inline_keyboard_client_change('имя'))
@@ -1291,20 +1317,40 @@ async def load_name_shop(message: types.Message, state: FSMContext):
         CLIENTS['name_shop'] = message.text
 
     await FSMAdmin_Clients_change.next()
+    await message.answer('Введите город:(Яровое, Славгород)')
+
+
+@dp.message_handler(state=FSMAdmin_Clients_change.Citi)
+async def add_citi(message: types.Message, state: FSMContext):
+    async with state.proxy() as data:
+        CLIENTS['Citi'] = message.text
+
+    await FSMAdmin_Clients_change.next()
+    await message.answer('Введите статус:(п или н')
+
+
+@dp.message_handler(state=FSMAdmin_Clients_change.Wiring)
+async def add_wiring(message: types.Message, state: FSMContext):
+    async with state.proxy() as data:
+        CLIENTS['Wiring'] = message.text
+
+    await FSMAdmin_Clients_change.next()
     await message.answer(f'Проверьте данные:\n'
                          f'имя клиента: {CLIENTS["name"]}\n'
-                         f'номер телефона: {CLIENTS["phone_number"]}\n'
-                         f'адрес: {CLIENTS["address"]}\n'
-                         f'название магазина : {CLIENTS["name_shop"]}\n'
+                         f'номер телефона: {CLIENTS["Phone_number"]}\n'
+                         f'адрес: {CLIENTS["Address"]}\n'
+                         f'название магазина : {CLIENTS["Name_shop"]}\n'
+                         f'город: {CLIENTS["citi"]}\n'
+                         f'статус: {CLIENTS["wiring"]}'
                          f'\n'
                          f'Если всё верно нажмите "Подтвердить"')
-
 
 # Клиенты - изменить - подтверждение изменения
 @dp.message_handler(commands=['Подтвердить'], state=FSMAdmin_Clients_change.Confirmation)
 async def cmd_cancel(message: types.Message, state: FSMContext):
     async with state.proxy() as data:
-        list_clients = [CLIENTS['id'], CLIENTS['name'], CLIENTS['phone_number'], CLIENTS['address'], CLIENTS['name_shop']]
+        list_clients = [CLIENTS['id'], CLIENTS['name'], CLIENTS['phone_number'], CLIENTS['address'],
+                        CLIENTS['name_shop'], CLIENTS['citi'], CLIENTS['wiring']]
 
     # записать в bd
     result = bd.change_clients(list_clients)
@@ -1363,7 +1409,7 @@ async def cmd_cancel(message: types.Message, state: FSMContext):
                              reply_markup=keyboard.kb_menu_admin())
 
 
-# Клиенты - удалить - выход из машины состаяний
+# Клиенты - удалить - выход из машины состояний
 @dp.message_handler(commands=['cancel'], state='*')  # если нажали cancel в любом из состаяний
 async def cmd_cancel(message: types.Message, state: FSMContext):
     if state == None:
@@ -1660,7 +1706,6 @@ async def cmd_cancel(message: types.Message, state: FSMContext):
     BROD.clear()
 
 
-
 # Хлеб - УДАЛИТЬ
 @dp.message_handler(Text(equals='Удалить - 🗑'))
 async def brod_add(message: types.Message):
@@ -1680,7 +1725,6 @@ async def brod_add(message: types.Message):
                          parse_mode="HTML")
     await message.answer(text='Введите необходимый id :',
                          reply_markup=keyboard.get_cancel())
-
 
 
 # ловим ID для удаления хлеба
@@ -1734,6 +1778,21 @@ async def cmd_cancel(message: types.Message, state: FSMContext):
 @dp.message_handler(Text(equals='<< Назад'))
 async def admin_application(message: types.Message):
     await message.delete()
+    await message.answer(text='Вы зашли в основное меню',
+                         reply_markup=keyboard.kb_menu_admin())
+
+
+# menu 'Итог(распечатка рассылка)
+@dp.message_handler(Text(equals='Итог(распечатка рассылка)'))
+async def finish(message: types.Message):
+    await message.delete()
+
+    # поместим все постоянные заявки в основную заявку
+    bd.add_permanent_app()
+
+
+
+
     await message.answer(text='Вы зашли в основное меню',
                          reply_markup=keyboard.kb_menu_admin())
 
