@@ -265,7 +265,6 @@ async def del_application(message: types.Message):
         # зайдем в bd и удалим заявку
         result = bd.del_applications(name_and_id_clients[0])
         if result == True:
-
             await message.answer(text=f'Вы успешно удалили заявку для: {name_and_id_clients[1]}!')
 
     else:
@@ -735,7 +734,6 @@ async def catch_id_clients(message: types.Message, state: FSMContext):
     async with state.proxy() as data:
         CLIENTS['id'] = int(message.text)
 
-
     # возьмем id и найдем по нему имя из bd
     CLIENTS['name_clients'] = bd.name_clients(CLIENTS['id'])
 
@@ -900,7 +898,6 @@ async def catch_id_clients(message: types.Message, state: FSMContext):
     async with state.proxy() as data:
         CLIENTS['id'] = int(message.text)
 
-
     # возьмем id и найдем по нему имя из bd
     CLIENTS['name_clients'] = bd.name_clients(CLIENTS['id'])
 
@@ -912,6 +909,8 @@ async def catch_id_clients(message: types.Message, state: FSMContext):
     await message.answer(text=f'Заявка для {CLIENTS["name_clients"]} на завтра, успешно УДАЛЕНА!!!',
                          reply_markup=keyboard.kb_menu_admin())
     await state.finish()
+
+
 #
 # # 'Заявки'- Удалить - ловим ID клиента, чтобы удалить его
 # @dp.message_handler(Text(contains='ud'))
@@ -1156,13 +1155,28 @@ async def add_name_shop(message: types.Message, state: FSMContext):
     await message.answer('Введите город:(Яровое, Славгород)')
 
 
+x = ['Яровое', 'Славгород', 'п', 'н']
+
+
+# делаем проверку сообщения пользователя на правильность ввода
+@dp.message_handler(lambda message: message.text not in x, state=FSMAdmin_Clients.Citi)
+async def check_photo(message: types.Message):
+    return await message.reply('Необходимо написать: Яровое или Славгород')
+
+
 @dp.message_handler(state=FSMAdmin_Clients.Citi)
 async def add_citi(message: types.Message, state: FSMContext):
     async with state.proxy() as data:
         data['Citi'] = message.text
 
     await FSMAdmin_Clients.next()
-    await message.answer('Введите статус:(п или н')
+    await message.answer('Введите статус: п(проводной) или н(не проводной)')
+
+
+# делаем проверку сообщения пользователя на правильность ввода
+@dp.message_handler(lambda message: message.text not in x, state=FSMAdmin_Clients.Wiring)
+async def check_photo(message: types.Message):
+    return await message.reply('Необходимо написать: п или н!')
 
 
 @dp.message_handler(state=FSMAdmin_Clients.Wiring)
@@ -1186,7 +1200,7 @@ async def add_wiring(message: types.Message, state: FSMContext):
 @dp.message_handler(commands=['Подтвердить'], state=FSMAdmin_Clients.Confirmation)
 async def cmd_cancel(message: types.Message, state: FSMContext):
     async with state.proxy() as data:
-        list_clients = [data['name'], data['Phone_number'], data['Address'], data['Name_shop'], data['Citi'],
+        list_clients = [data['Name'], data['Phone_number'], data['Address'], data['Name_shop'], data['Citi'],
                         data['Wiring']]
 
     # записать в bd
@@ -1220,19 +1234,17 @@ async def client_change(message: types.Message):
 
 # МАШИНА СОСТОЯНИЙ - изменение клиента ############
 @dp.message_handler(state=FSMAdmin_Clients_change.Id)
-async def load_name(message: types.Message, state: FSMContext):
+async def load_id(message: types.Message, state: FSMContext):
     async with state.proxy() as data:
-
         data['id'] = message.text
         # зайдем в bd и вытащим прайс хлеба со всеми данными
         list_clients = bd.get_info_client(int(data['id']))
 
-
     # Поместим в наш словарь изначальные данные
     global CLIENTS
-    CLIENTS = {'id': int(message.text), 'name': list_clients[1], 'phone_number': list_clients[2],
-               'address': list_clients[3], 'name_shop': list_clients[4], 'citi': list_clients[5],
-               'wiring': list_clients[6]}
+    CLIENTS = {'id': int(message.text), 'Name': list_clients[1], 'Phone_number': list_clients[2],
+               'Address': list_clients[3], 'Name_shop': list_clients[4], 'Citi': list_clients[6],
+               'Wiring': list_clients[7]}
 
     await message.answer(f'Наименование: {list_clients[1]}',
                          reply_markup=keyboard.get_inline_keyboard_client_change('имя'))
@@ -1244,7 +1256,8 @@ async def change(callback: types.CallbackQuery):
     if callback.data == 'Меняем имя':
         await callback.message.answer(text='Введите новое имя:')
         await FSMAdmin_Clients_change.Name.set()
-    if callback.data == 'Меняем телефон ':
+
+    if callback.data == 'Меняем телефон':
         await callback.message.answer(text='Введите новый номер:')
         await FSMAdmin_Clients_change.Phone_number.set()
 
@@ -1256,68 +1269,93 @@ async def change(callback: types.CallbackQuery):
         await callback.message.answer(text='Введите новое название:')
         await FSMAdmin_Clients_change.Name_shop.set()
 
+    if callback.data == 'Меняем город':
+        await callback.message.answer(text='Введите город:')
+        await FSMAdmin_Clients_change.Citi.set()
+
+    if callback.data == 'Меняем статус':
+        await callback.message.answer(text='Введите статус:')
+        await FSMAdmin_Clients_change.Wiring.set()
+
 
 @dp.callback_query_handler(lambda callback_query: callback_query.data.startswith('Вперед'))
 async def change(callback: types.CallbackQuery):
     if callback.data == 'Вперед имя':
-        await callback.message.answer(f'Номер:  {CLIENTS["phone_number"]}',
+        await callback.message.answer(f'Номер:  {CLIENTS["Phone_number"]}',
                                       reply_markup=keyboard.get_inline_keyboard_client_change('телефон'))
 
     if callback.data == 'Вперед телефон':
-        await callback.message.answer(f'Адрес: {CLIENTS["address"]}"',
+        await callback.message.answer(f'Адрес: {CLIENTS["Address"]}',
                                       reply_markup=keyboard.get_inline_keyboard_client_change('адрес'))
 
     if callback.data == 'Вперед адрес':
-        await callback.message.answer(f'Название магазина: {CLIENTS["name_shop"]}',
+        await callback.message.answer(f'Название магазина: {CLIENTS["Name_shop"]}',
                                       reply_markup=keyboard.get_inline_keyboard_client_change('название магазина'))
+
+    if callback.data == 'Вперед название магазина':
+        await callback.message.answer(f'Город: {CLIENTS["Citi"]}',
+                                      reply_markup=keyboard.get_inline_keyboard_client_change('город'))
+
+    if callback.data == 'Вперед город':
+        await callback.message.answer(f'Статус: {CLIENTS["Wiring"]}',
+                                      reply_markup=keyboard.get_inline_keyboard_client_change('статус'))
+
+    if callback.data == 'Вперед статус':
+        await callback.message.answer(f'Проверьте данные:\n'
+                                      f'имя клиента: {CLIENTS["Name"]}\n'
+                                      f'номер телефона: {CLIENTS["Phone_number"]}\n'
+                                      f'адрес: {CLIENTS["Address"]}\n'
+                                      f'название магазина : {CLIENTS["Name_shop"]}\n'
+                                      f'город: {CLIENTS["Citi"]}\n'
+                                      f'статус: {CLIENTS["Wiring"]}'
+                                      f'\n'
+                                      f'Если всё верно нажмите "Подтвердить"')
+        await FSMAdmin_Clients_change.Confirmation.set()
 
 
 @dp.message_handler(state=FSMAdmin_Clients_change.Name)
 async def load_name(message: types.Message, state: FSMContext):
     async with state.proxy() as data:
-        CLIENTS['name'] = message.text
-
-    # из bd вытащим данные клиента и поместим в список
-    client = bd.get_info_client(CLIENTS['id'])
+        CLIENTS['Name'] = message.text
 
     await state.finish()
-    await message.answer(f'Номер телефона: ⚖️{CLIENTS["phone_number"]}',
+    await message.answer(f'Номер телефона: {CLIENTS["Phone_number"]}',
                          reply_markup=keyboard.get_inline_keyboard_client_change('телефон'))
 
 
 @dp.message_handler(state=FSMAdmin_Clients_change.Phone_number)
 async def load_photo_number(message: types.Message, state: FSMContext):
     async with state.proxy() as data:
-        CLIENTS['phone_number'] = message.text
-
-    # из bd вытащим данные клиента и поместим в список
-    client = bd.get_info_client(CLIENTS['id'])
-
+        CLIENTS['Phone_number'] = message.text
     await state.finish()
-    await message.reply(f'Cтарый адрес: {CLIENTS["address"]}\n',
-                        reply_markup=keyboard.get_inline_keyboard_client_change('адрес'))
+    await message.answer(f'Адрес: {CLIENTS["Address"]}\n',
+                         reply_markup=keyboard.get_inline_keyboard_client_change('адрес'))
 
 
 @dp.message_handler(state=FSMAdmin_Clients_change.Address)
 async def load_address(message: types.Message, state: FSMContext):
     async with state.proxy() as data:
-        CLIENTS['address'] = message.text
-
-    # из bd вытащим данные клиента и поместим в список
-    client = bd.get_info_client(CLIENTS['id'])
+        CLIENTS['Address'] = message.text
 
     await state.finish()
-    await message.reply(f'Старое название: {CLIENTS["name_shop"]}\n',
-                        reply_markup=keyboard.get_inline_keyboard_client_change('Название магазина'))
+    await message.answer(f'Название магазина: {CLIENTS["Name_shop"]}\n',
+                         reply_markup=keyboard.get_inline_keyboard_client_change('название магазина'))
 
 
 @dp.message_handler(state=FSMAdmin_Clients_change.Name_shop)
 async def load_name_shop(message: types.Message, state: FSMContext):
     async with state.proxy() as data:
-        CLIENTS['name_shop'] = message.text
+        CLIENTS['Name_shop'] = message.text
 
-    await FSMAdmin_Clients_change.next()
-    await message.answer('Введите город:(Яровое, Славгород)')
+    await state.finish()
+    await message.answer(f'Город: {CLIENTS["Citi"]}\n',
+                         reply_markup=keyboard.get_inline_keyboard_client_change('город'))
+
+
+# делаем проверку сообщения пользователя на правильность ввода
+@dp.message_handler(lambda message: message.text not in x, state=FSMAdmin_Clients_change.Citi)
+async def check_citi(message: types.Message):
+    return await message.reply('Необходимо написать: Яровое или Славгород')
 
 
 @dp.message_handler(state=FSMAdmin_Clients_change.Citi)
@@ -1325,8 +1363,15 @@ async def add_citi(message: types.Message, state: FSMContext):
     async with state.proxy() as data:
         CLIENTS['Citi'] = message.text
 
-    await FSMAdmin_Clients_change.next()
-    await message.answer('Введите статус:(п или н')
+    await state.finish()
+    await message.answer(f'Статус: {CLIENTS["Wiring"]}\n',
+                         reply_markup=keyboard.get_inline_keyboard_client_change('статус'))
+
+
+# делаем проверку сообщения пользователя на правильность ввода
+@dp.message_handler(lambda message: message.text not in x, state=FSMAdmin_Clients_change.Citi)
+async def check_citi(message: types.Message):
+    return await message.reply('Необходимо написать: "п" или "н"!!')
 
 
 @dp.message_handler(state=FSMAdmin_Clients_change.Wiring)
@@ -1334,23 +1379,25 @@ async def add_wiring(message: types.Message, state: FSMContext):
     async with state.proxy() as data:
         CLIENTS['Wiring'] = message.text
 
-    await FSMAdmin_Clients_change.next()
+    await state.finish()
     await message.answer(f'Проверьте данные:\n'
-                         f'имя клиента: {CLIENTS["name"]}\n'
+                         f'имя клиента: {CLIENTS["Name"]}\n'
                          f'номер телефона: {CLIENTS["Phone_number"]}\n'
                          f'адрес: {CLIENTS["Address"]}\n'
                          f'название магазина : {CLIENTS["Name_shop"]}\n'
-                         f'город: {CLIENTS["citi"]}\n'
-                         f'статус: {CLIENTS["wiring"]}'
+                         f'город: {CLIENTS["Citi"]}\n'
+                         f'статус: {CLIENTS["Wiring"]}'
                          f'\n'
                          f'Если всё верно нажмите "Подтвердить"')
+    await FSMAdmin_Clients_change.Confirmation.set()
+
 
 # Клиенты - изменить - подтверждение изменения
 @dp.message_handler(commands=['Подтвердить'], state=FSMAdmin_Clients_change.Confirmation)
 async def cmd_cancel(message: types.Message, state: FSMContext):
     async with state.proxy() as data:
-        list_clients = [CLIENTS['id'], CLIENTS['name'], CLIENTS['phone_number'], CLIENTS['address'],
-                        CLIENTS['name_shop'], CLIENTS['citi'], CLIENTS['wiring']]
+        list_clients = [CLIENTS['id'], CLIENTS['Name'], CLIENTS['Phone_number'], CLIENTS['Address'],
+                        CLIENTS['Name_shop'], CLIENTS['Citi'], CLIENTS['Wiring']]
 
     # записать в bd
     result = bd.change_clients(list_clients)
@@ -1514,6 +1561,7 @@ async def cmd_cancel(message: types.Message, state: FSMContext):
 # создадим переменную и будем помещать в неё новуб информацию о хлебе
 BROD = {}
 
+
 @dp.message_handler(Text(equals='Изменить 🍞🔄🥖'))
 async def brod_add(message: types.Message):
     await FSMAdmin_Brod_change.ID.set()
@@ -1596,18 +1644,19 @@ async def change(callback: types.CallbackQuery):
                                       reply_markup=keyboard.get_inline_keyboard_brod_change3('Цена Славгород'))
 
     if callback.data == 'Дальше Цена Славгород':
-        
+
         if BROD['photo'] == None:
-        # await callback.message.answer(f'Фото: \n'
-        #                               f'{BROD["photo"]}',
-        #                               reply_markup=keyboard.get_inline_keyboard_brod_change3('Фото'))
+            # await callback.message.answer(f'Фото: \n'
+            #                               f'{BROD["photo"]}',
+            #                               reply_markup=keyboard.get_inline_keyboard_brod_change3('Фото'))
 
             await bot.send_photo(chat_id=callback.from_user.id,
-                             photo=BROD['photo'],
-                             reply_markup=keyboard.get_inline_keyboard_brod_change3('Фото'))
+                                 photo=BROD['photo'],
+                                 reply_markup=keyboard.get_inline_keyboard_brod_change3('Фото'))
         else:
             await callback.message.answer(f'Фото нет!',
                                           reply_markup=keyboard.get_inline_keyboard_brod_change3('Фото'))
+
 
 @dp.message_handler(state=FSMAdmin_Brod_change.Name)
 async def load_name(message: types.Message, state: FSMContext):
@@ -1744,7 +1793,6 @@ async def load_id(message: types.Message, state: FSMContext):
             for da in data_brod:
                 list_brod_del.append(da)
 
-
     await message.reply(text=f'Если вы хотите удалить: {list_brod_del[1]}\n'
                              f'нажмите "Подтвердить" ')
 
@@ -1789,9 +1837,6 @@ async def finish(message: types.Message):
 
     # поместим все постоянные заявки в основную заявку
     bd.add_permanent_app()
-
-
-
 
     await message.answer(text='Вы зашли в основное меню',
                          reply_markup=keyboard.kb_menu_admin())
@@ -1841,12 +1886,12 @@ async def start_command(message: types.Message):
                                reply_markup=keyboard.kb_reg())  # запускаем клавиатуру
         await message.delete()
 
-    # # если вы админ откроем админское меню
-    # elif message.from_user.id == ADMIN:
-    #     await bot.send_message(chat_id=message.from_user.id,  # отписываемся в личный чат
-    #                            text='Привет Наташа',  # пишем этот текст
-    #                            reply_markup=keyboard.kb_menu_admin())  # запускаем клавиатуру
-    #     await message.delete()
+    # если вы админ откроем админское меню
+    elif message.from_user.id == ADMIN:
+        await bot.send_message(chat_id=message.from_user.id,  # отписываемся в личный чат
+                               text='Привет Наташа',  # пишем этот текст
+                               reply_markup=keyboard.kb_menu_admin())  # запускаем клавиатуру
+        await message.delete()
 
     # если клиент зарегистрирован, то откроем клавиатуру клиентская
     else:

@@ -660,7 +660,7 @@ def change_clients(list_clients):
                                        Город = ?,
                                        Проводка = ?
                                        where ClientsID == ?''',
-                (list_clients[1], list_clients[2], list_clients[3], list_clients[4], list_clients[6],
+                (list_clients[1], list_clients[2], list_clients[3], list_clients[4], list_clients[5],
                  list_clients[6], list_clients[0]))
     conn.commit()
     conn.close()
