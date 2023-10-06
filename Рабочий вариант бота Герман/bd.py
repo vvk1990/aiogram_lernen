@@ -14,6 +14,7 @@ def price():
     conn.close()
     return data_clients
 
+
 # Список названия хлеба
 def price_name():
     conn = sq.connect('Works.db')
@@ -26,6 +27,7 @@ def price_name():
     conn.close()
     return data_clients
 
+
 # Создадим функцию вывода Прайса для Ярового из bd
 def price_jrovoe():
     conn = sq.connect('Works.db')
@@ -36,7 +38,6 @@ def price_jrovoe():
         data_clients.append(i)
     conn.close()
     return data_clients
-
 
 
 # Создадим функцию вывода Прайса для Славгорода из bd
@@ -90,6 +91,7 @@ def name_clients(user_id):
     conn.close()
     return name_clients
 
+
 # Создадим функцию вывода имени клиента по его id2
 def name_clients2(user_id):
     conn = sq.connect('Works.db')
@@ -130,8 +132,6 @@ def id_and_name_all_clients():
         data_clients.append(i)
     conn.close()
     return data_clients
-
-
 
 
 # функция просмотрзаявки на наличие
@@ -731,6 +731,7 @@ def del_brod(id_brod):
     conn.close()
     return True
 
+
 # финиш - помещаем постоянные заявки(нужного нам дня) в список для добавления их в заявку завтрашнего дня
 def add_permanent_app():
     # получаем сегодняшнюю дату
@@ -839,3 +840,299 @@ def add_permanent_app():
                          , list_application[39], list_application[40], list_application[41]))
 
             conn.commit()
+
+
+# зайдем в bd и поместим в список клиентов Яровских проводных
+def app_jr_pr(list_name_brod2_osnov):
+    # получаем сегодняшнюю дату
+    date_today = datetime.datetime.today()
+    # получаем завтрешнюю дату
+    date_tomorrow = date_today + datetime.timedelta(days=1)
+    # создаём переменную с завтрешней датой в удобном формате
+    name_table_application = date_tomorrow.strftime('day_%d_%m_%y')
+
+    list_val = []
+    conn = None
+    try:
+
+        conn = sq.connect('Works.db')
+        cur = conn.cursor()
+        cur.execute(f'''select Name_Clients, Батон_Сдобный,
+                                  Батон_Французский,
+                                  Хлеб_Богатырский_отрубной,
+                                  Хлеб_Богатырский_отрубной_круглый,
+                                  Хлеб_Дарк_8_злаков,
+                                  Хлеб_Классический_075,
+                                  Хлеб_Классический_050,
+                                  Хлеб_Классический_035,
+                                  Хлеб_Купеческий_заварной_с_изюмом,
+                                  Хлеб_Купеческий_заварной_с_тмином,
+                                  Хлеб_Овсяный,
+                                  Хлеб_Степной,
+                                  Хлеб_Тостовый,
+                                  Хлеб_Чиабатта,
+                                  Хлеб_Яровской_ржаной,
+                                  Булочка_К_чаю,
+                                  Булочка_С_корицей,
+                                  Булочка_С_корицей_и_кремом,
+                                  Булочка_С_чесноком,
+                                  Булочка_С_кунжутом_для_гамбургера,
+                                  Булочка_Сдобная_для_хот_дога,
+                                  Плетёнка_с_маком,
+                                  Плюшка,
+                                  Растегай,
+                                  Рогалик,
+                                  Рулет_с_маком,
+                                  Тесто_Пирожковое_охлажденное,
+                                  Пряники
+                                   from {name_table_application} where Город == Яровое  or Проводка == п''')
+        list_val1 = cur.fetchall()
+
+        for val in list_val1:
+            list_val.append(list(val))
+
+        # теперь подсчитаем итог и по столбцам для проводных яровских клиентов  и запишим в наш список(list_val)
+        list_sum_clients1_1 = ['итого']
+        list_sum_clients1_1_dable = []
+        # с помощью цикла пройдемся по столбцам, подсчитаем их суммы и запишим их в список(list_sum_clients1_1)
+        for brod in list_name_brod2_osnov:
+            cur.execute(f'''select sum ({brod}) from {name_table_application} where Город == Яровое or Проводка == п''')
+            list_sum_clients1_1_dable.append(cur.fetchone())
+        for i in list_sum_clients1_1_dable:
+            for c in i:
+                list_sum_clients1_1.append(c)
+        # запишим в список заказов для распечатки список суммы стольцов коиентов до 14 id
+        list_val.append(list_sum_clients1_1)
+
+        # считаем клиентов ярового непроводных
+        cur.execute(f'''select Name_Clients, Батон_Сдобный,
+                                             Батон_Французский,
+                                             Хлеб_Богатырский_отрубной,
+                                             Хлеб_Богатырский_отрубной_круглый,
+                                             Хлеб_Дарк_8_злаков,
+                                             Хлеб_Классический_075,
+                                             Хлеб_Классический_050,
+                                             Хлеб_Классический_035,
+                                             Хлеб_Купеческий_заварной_с_изюмом,
+                                             Хлеб_Купеческий_заварной_с_тмином,
+                                             Хлеб_Овсяный,
+                                             Хлеб_Степной,
+                                             Хлеб_Тостовый,
+                                             Хлеб_Чиабатта,
+                                             Хлеб_Яровской_ржаной,
+                                             Булочка_К_чаю,
+                                             Булочка_С_корицей,
+                                             Булочка_С_корицей_и_кремом,
+                                             Булочка_С_чесноком,
+                                             Булочка_С_кунжутом_для_гамбургера,
+                                             Булочка_Сдобная_для_хот_дога,
+                                             Плетёнка_с_маком,
+                                             Плюшка,
+                                             Растегай,
+                                             Рогалик,
+                                             Рулет_с_маком,
+                                             Тесто_Пирожковое_охлажденное,
+                                             Пряники
+                                              from {name_table_application} where Город == Яровое or Проводка == н''')
+        list_val1 = cur.fetchall()
+        for val in list_val1:
+            list_val.append(list(val))
+
+            # теперь подсчитаем сумму проводных и непроводных клиентов и запишем в наш список(list_val)
+        list_sum_clients1_2 = ['всего']
+        list_sum_clients1_2_dable = []
+        # с помощью цикла пройдемся по столбцам, подсчитаем их суммы и запишим их в список(list_sum_clients1_1)
+        for brod in list_name_brod2_osnov:
+            cur.execute(f'''select sum ({brod}) from {name_table_application} where Город == Яровое''')
+            list_sum_clients1_2_dable.append(cur.fetchone())
+        for i in list_sum_clients1_2_dable:
+            for c in i:
+                list_sum_clients1_2.append(c)
+        # запишим в список заказов для распечатки список суммы стольцов колиентов Ярового
+        list_val.append(list_sum_clients1_2)
+
+    except sq.Error as err:
+        print('Ошибка бызы данных', err)
+    finally:
+        if conn != None:
+            conn.close()
+
+    return list_val
+
+
+# Славгород
+def app_sl(list_name_brod2_osnov):
+    # получаем сегодняшнюю дату
+    date_today = datetime.datetime.today()
+    # получаем завтрешнюю дату
+    date_tomorrow = date_today + datetime.timedelta(days=1)
+    # создаём переменную с завтрешней датой в удобном формате
+    name_table_application = date_tomorrow.strftime('day_%d_%m_%y')
+
+    # создаём список заявок Славгорода для распечатки
+    list_val_slav = []
+    # подключимся к базе данных и соберем информацию и записываем её наш список,
+    # но сначала считаем клиентов Славгорода проводных
+    conn = None
+    try:
+
+        conn = sq.connect('Works.db')
+        cur = conn.cursor()
+        cur.execute(f'''select Name_Clients, Батон_Сдобный,
+                                             Батон_Французский,
+                                             Хлеб_Богатырский_отрубной,
+                                             Хлеб_Богатырский_отрубной_круглый,
+                                             Хлеб_Дарк_8_злаков,
+                                             Хлеб_Классический_075,
+                                             Хлеб_Классический_050,
+                                             Хлеб_Классический_035,
+                                             Хлеб_Купеческий_заварной_с_изюмом,
+                                             Хлеб_Купеческий_заварной_с_тмином,
+                                             Хлеб_Овсяный,
+                                             Хлеб_Степной,
+                                             Хлеб_Тостовый,
+                                             Хлеб_Чиабатта,
+                                             Хлеб_Яровской_ржаной,
+                                             Булочка_К_чаю,
+                                             Булочка_С_корицей,
+                                             Булочка_С_корицей_и_кремом,
+                                             Булочка_С_чесноком,
+                                             Булочка_С_кунжутом_для_гамбургера,
+                                             Булочка_Сдобная_для_хот_дога,
+                                             Плетёнка_с_маком,
+                                             Плюшка,
+                                             Растегай,
+                                             Рогалик,
+                                             Рулет_с_маком,
+                                             Тесто_Пирожковое_охлажденное,
+                                             Пряники
+                                              from {name_table_application} where Город == Славгород or Проводка == п''')
+        list_val1 = cur.fetchall()
+        for val in list_val1:
+            list_val_slav.append(list(val))
+
+        # теперь подсчитаем итог и по столбцам для проводных клиентов и запишим в наш список(list_val_slav)
+        list_sum_clients2_1 = ['итого']
+        list_sum_clients2_1_dable = []
+        # с помощью цикла пройдемся по столбцам, подсчитаем их суммы и запишим их в список(list_sum_clients2_1)
+        for brod in list_name_brod2_osnov:
+            cur.execute(f'''select sum ({brod}) from {name_table_application}
+                                                where Город == Славгород or Проводка == п''')
+            list_sum_clients2_1_dable.append(cur.fetchone())
+        for i in list_sum_clients2_1_dable:
+            for c in i:
+                list_sum_clients2_1.append(c)
+        # запишем в список заказов для распечатки список суммы столбцов проводимых клиентов
+        list_val_slav.append(list_sum_clients2_1)
+
+        # считаем клиентов славгорода не проводных
+        cur.execute(f'''select Name_Clients, Батон_Сдобный,
+                                                        Батон_Французский,
+                                                        Хлеб_Богатырский_отрубной,
+                                                        Хлеб_Богатырский_отрубной_круглый,
+                                                        Хлеб_Дарк_8_злаков,
+                                                        Хлеб_Классический_075,
+                                                        Хлеб_Классический_050,
+                                                        Хлеб_Классический_035,
+                                                        Хлеб_Купеческий_заварной_с_изюмом,
+                                                        Хлеб_Купеческий_заварной_с_тмином,
+                                                        Хлеб_Овсяный,
+                                                        Хлеб_Степной,
+                                                        Хлеб_Тостовый,
+                                                        Хлеб_Чиабатта,
+                                                        Хлеб_Яровской_ржаной,
+                                                        Булочка_К_чаю,
+                                                        Булочка_С_корицей,
+                                                        Булочка_С_корицей_и_кремом,
+                                                        Булочка_С_чесноком,
+                                                        Булочка_С_кунжутом_для_гамбургера,
+                                                        Булочка_Сдобная_для_хот_дога,
+                                                        Плетёнка_с_маком,
+                                                        Плюшка,
+                                                        Растегай,
+                                                        Рогалик,
+                                                        Рулет_с_маком,
+                                                        Тесто_Пирожковое_охлажденное,
+                                                        Пряники
+                                                         from {name_table_application} 
+                                                         where Город == Славгород or Проводка == н''')
+        list_val1 = cur.fetchall()
+        for val in list_val1:
+            list_val_slav.append(list(val))
+
+        # теперь подсчитаем сумму проводных и непроводных клиентов и запишем в наш список(list_val_slav)
+        list_sum_clients2_1 = ['всего']
+        list_sum_clients2_2_dable = []
+        # с помощью цикла пройдемся по столбцам, подсчитаем их суммы и запишим их в список(list_sum_clients2_1)
+        for brod in list_name_brod2_osnov:
+            cur.execute(f'''select sum ({brod}) from {name_table_application}''')
+            list_sum_clients2_2_dable.append(cur.fetchone())
+        for i in list_sum_clients2_2_dable:
+            for c in i:
+                list_sum_clients2_1.append(c)
+        # запишем в список заказов для распечатки список суммы столбцов клиентов проводных и не проводных id
+        # до 41
+        list_val_slav.append(list_sum_clients2_1)
+    except sq.Error as err:
+        print('Ошибка бызы данных', err)
+    finally:
+        if conn is not None:
+            conn.close()
+
+    return list_val_slav
+
+
+# Создаем список для Галины Васильевны
+def app_dop(list_name_brod2_dop):
+    # получаем сегодняшнюю дату
+    date_today = datetime.datetime.today()
+    # получаем завтрашнюю дату
+    date_tomorrow = date_today + datetime.timedelta(days=1)
+    # создаём переменную с завтрашней датой в удобном формате
+    name_table_application = date_tomorrow.strftime('day_%d_%m_%y')
+
+    list_val_dop = []
+    # подключимся к базе данных и соберем информацию и записываем её наш список,
+    conn = None
+    try:
+
+        conn = sq.connect('Works.db')
+        cur = conn.cursor()
+        cur.execute(f'''select Name_Clients,
+                                              Ватрушка_с_творогом,
+                                              Ватрушка_с_сыром,
+                                              Ватрушка_с_конфитюром,
+                                              Беляш_печеный,
+                                              Кекс_классический,
+                                              Кекс_шоколадный,
+                                              Кулебяка,
+                                              Пирог_с_капустой,
+                                              Пирог_с_яблоками,
+                                              Пицца_мини,
+                                              Ромовая_баба,
+                                              Сосиска_в_тесте from {name_table_application} ''')
+        list_val1 = cur.fetchall()
+        # если количество хлеба в заявке не 0, тогда запишем заявку клиента в список для печати
+        for val in list_val1:
+            if val[1] + val[2] + val[3] + val[4] + val[5] + val[6] + val[7] + val[8] + val[9] + val[10] + val[11] \
+                    + val[12] != 0:
+                list_val_dop.append(list(val))
+        # теперь подсчитаем итог и по столбцам для всех клиентов и запишем в наш список(list_val_dop)
+        list_sum_clients1_1 = ['итого']
+        list_sum_clients1_1_dable = []
+        # с помощью цикла пройдемся по столбцам, подсчитаем их суммы и запишем их в список(list_sum_clients1_1)
+        for brod in list_name_brod2_dop:
+            cur.execute(f'''select sum ({brod}) from {name_table_application}''')
+            list_sum_clients1_1_dable.append(cur.fetchone())
+        for i in list_sum_clients1_1_dable:
+            for c in i:
+                list_sum_clients1_1.append(c)
+        # запишим в список заказов для распечатки список суммы стольцов
+        list_val_dop.append(list_sum_clients1_1)
+    except sq.Error as err:
+        print('Ошибка бызы данных', err)
+    finally:
+        if conn is not None:
+            conn.close()
+
+    return list_val_dop

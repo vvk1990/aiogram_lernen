@@ -3,6 +3,9 @@ from aiogram.dispatcher.filters import Text
 from aiogram.dispatcher.filters.state import State, StatesGroup
 from aiogram.dispatcher import FSMContext
 from config import TOKEN_API
+import PrintList
+import sys
+from PyQt5 import QtWidgets
 
 # # машина состояний
 from aiogram.contrib.fsm_storage.memory import MemoryStorage
@@ -188,6 +191,91 @@ list_application1 = [0] * len(bd.price_name())
 # list_aplication1 = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 #                     0, 0, 0, 0, 0, 0, 0]
 
+# списки хлеба для печати
+list_name_brod2_osnov = ['Батон_Сдобный',
+                         'Батон_Французский',
+                         'Хлеб_Богатырский_отрубной',
+                         'Хлеб_Богатырский_отрубной_круглый',
+                         'Хлеб_Дарк_8_злаков',
+                         'Хлеб_Классический_075',
+                         'Хлеб_Классический_050',
+                         'Хлеб_Классический_035',
+                         'Хлеб_Купеческий_заварной_с_изюмом',
+                         'Хлеб_Купеческий_заварной_с_тмином',
+                         'Хлеб_Овсяный',
+                         'Хлеб_Степной',
+                         'Хлеб_Тостовый',
+                         'Хлеб_Чиабатта',
+                         'Хлеб_Яровской_ржаной',
+                         'Булочка_К_чаю',
+                         'Булочка_С_корицей',
+                         'Булочка_С_корицей_и_кремом',
+                         'Булочка_С_чесноком',
+                         'Булочка_С_кунжутом_для_гамбургера',
+                         'Булочка_Сдобная_для_хот_дога',
+                         'Плетёнка_с_маком',
+                         'Плюшка',
+                         'Растегай',
+                         'Рогалик',
+                         'Рулет_с_маком',
+                         'Тесто_Пирожковое_охлажденное',
+                         'Пряники']
+list_name_brod2_dop = [
+    'Ватрушка_с_творогом',
+    'Ватрушка_с_сыром',
+    'Ватрушка_с_конфитюром',
+    'Беляш_печеный',
+    'Кекс_классический',
+    'Кекс_шоколадный',
+    'Кулебяка',
+    'Пирог_с_капустой',
+    'Пирог_с_яблоками',
+    'Пицца_мини',
+    'Ромовая_баба',
+    'Сосиска_в_тесте']
+list_name_brod2_osnov_print = ['Клиент',
+                               'Сдоб',
+                               'Фран',
+                               'Бога',
+                               'Богк',
+                               'Дарк',
+                               'Кл75',
+                               'Кл50',
+                               'Кл35',
+                               'Куиз',
+                               'Кутм',
+                               'Овся',
+                               'Степ',
+                               'Тост',
+                               'Чиаб',
+                               'Яров',
+                               'Кчаю',
+                               'Кори',
+                               'Коркр',
+                               'Счес',
+                               'гамб',
+                               'хотд',
+                               'Плет',
+                               'Плюш',
+                               'Раст',
+                               'Рога',
+                               'Руле',
+                               'Тест',
+                               'Прян']
+list_name_brod2_dop_print = ['Клиент',
+                             'Ватв',
+                             'Васы',
+                             'Вако',
+                             'Беля',
+                             'КеКл',
+                             'КеШо',
+                             'Куле',
+                             'ПиКа',
+                             'ПиЯб',
+                             'Пицц',
+                             'Ромо',
+                             'Соси']
+
 ADMIN = 1914231330
 
 # Приветсивенный текст
@@ -358,43 +446,43 @@ async def ikb_cd_handler(callbeck: types.CallbackQuery):
 
 # '+10' к заявке
 @dp.callback_query_handler(lambda callback_query: callback_query.data.startswith('10+'))
-async def ikb_cd_handler(callbeck: types.CallbackQuery):
-    id = callbeck.from_user.id
+async def ikb_cd_handler(callback: types.CallbackQuery):
+    id = callback.from_user.id
     # проверим под каким индексом находится хлеб в списке
     # если длина данных с кнопки не больше двух символов(первый '+')
-    if len(callbeck.data) == 4:
+    if len(callback.data) == 4:
         # тогда прибавляем к заказу по индексу int(callbeck.data[1]),+1 в списке заказов
-        list_application1[int(callbeck.data[1])] += 10
+        list_application1[int(callback.data[3])] += 10
         # затем меняем текст шапки(незнаю можно ли обойтись без этого) и перезаписываем клавиатуру
-        await callbeck.message.edit_text(text=f'<b>{list_name_brod_osnov[int(callbeck.data[3])]}</b>',
-                                         reply_markup=keyboard.get_iline_keyboard(callbeck.data[3],
+        await callback.message.edit_text(text=f'<b>{list_name_brod_osnov[int(callback.data[3])]}</b>',
+                                         reply_markup=keyboard.get_iline_keyboard(callback.data[3],
                                                                                   list_application1[
-                                                                                      int(callbeck.data[3])]),
+                                                                                      int(callback.data[3])]),
                                          parse_mode="HTML")
 
     # если длина данных с кнопки ровна 3 символам(первый '+', второй '1')
-    elif len(callbeck.data) == 5 and int(callbeck.data[3]) == 1:
-        list_application1[10 + int(callbeck.data[4])] += 10
-        await callbeck.message.edit_text(
-            text=f'<b>{list_name_brod_osnov[10 + int(callbeck.data[4])]}</b>',
-            reply_markup=keyboard.get_iline_keyboard(10 + int(callbeck.data[4]),
-                                                     list_application1[10 + int(callbeck.data[4])]),
+    elif len(callback.data) == 5 and int(callback.data[3]) == 1:
+        list_application1[10 + int(callback.data[4])] += 10
+        await callback.message.edit_text(
+            text=f'<b>{list_name_brod_osnov[10 + int(callback.data[4])]}</b>',
+            reply_markup=keyboard.get_iline_keyboard(10 + int(callback.data[4]),
+                                                     list_application1[10 + int(callback.data[4])]),
             parse_mode="HTML")
     # если длина данных с кнопки ровна 3 символам(первый '+', второй '2')
-    elif len(callbeck.data) == 5 and int(callbeck.data[3]) == 2:
-        list_application1[20 + int(callbeck.data[4])] += 10
-        await callbeck.message.edit_text(
-            text=f'<b>{list_name_brod_osnov[20 + int(callbeck.data[4])]}</b>',
-            reply_markup=keyboard.get_iline_keyboard(20 + int(callbeck.data[2]),
-                                                     list_application1[20 + int(callbeck.data[4])]),
+    elif len(callback.data) == 5 and int(callback.data[3]) == 2:
+        list_application1[20 + int(callback.data[4])] += 10
+        await callback.message.edit_text(
+            text=f'<b>{list_name_brod_osnov[20 + int(callback.data[4])]}</b>',
+            reply_markup=keyboard.get_iline_keyboard(20 + int(callback.data[2]),
+                                                     list_application1[20 + int(callback.data[4])]),
             parse_mode="HTML")  # пишем текст
     # если длина данных с кнопки ровна 3 символам(первый '+', второй '3')
-    elif len(callbeck.data) == 5 and int(callbeck.data[3]) == 3:
-        list_application1[30 + int(callbeck.data[4])] += 10
-        await callbeck.message.edit_text(
-            text=f'<b>{list_name_brod_osnov[30 + int(callbeck.data[4])]}</b>',
-            reply_markup=keyboard.get_iline_keyboard(30 + int(callbeck.data[4]),
-                                                     list_application1[30 + int(callbeck.data[4])]),
+    elif len(callback.data) == 5 and int(callback.data[3]) == 3:
+        list_application1[30 + int(callback.data[4])] += 10
+        await callback.message.edit_text(
+            text=f'<b>{list_name_brod_osnov[30 + int(callback.data[4])]}</b>',
+            reply_markup=keyboard.get_iline_keyboard(30 + int(callback.data[4]),
+                                                     list_application1[30 + int(callback.data[4])]),
             parse_mode="HTML")  # пишем текст
 
 
@@ -403,7 +491,7 @@ async def ikb_cd_handler(callbeck: types.CallbackQuery):
 async def ikb_cd_handler(callbeck: types.CallbackQuery):
     # если длина данных с кнопки не больше двух символов(первый '-')
     if len(callbeck.data) == 4:
-        if list_application1[int(callbeck.data[3])] != 0:
+        if list_application1[int(callbeck.data[3])] != 0 or list_application1[int(callbeck.data[3])] >= 10:
             list_application1[int(callbeck.data[3])] -= 10
         await callbeck.message.edit_text(
             text=f'<b>{list_name_brod_osnov[int(callbeck.data[3])]}</b>',
@@ -413,7 +501,7 @@ async def ikb_cd_handler(callbeck: types.CallbackQuery):
     # если длина данных с кнопки ровна 3 символам(первый '-', второй '1')
     elif len(callbeck.data) == 5 and int(callbeck.data[3]) == 1:
         # если значение в списке заявок не ровно нулю тогда можно отнять 1 от заявки
-        if list_application1[10 + int(callbeck.data[4])] != 0:
+        if list_application1[10 + int(callbeck.data[4])] != 0 or list_application1[10 + int(callbeck.data[4])] >= 10:
             list_application1[10 + int(callbeck.data[4])] -= 10
         await callbeck.message.edit_text(
             text=f'<b>{list_name_brod_osnov[10 + int(callbeck.data[4])]}</b>',
@@ -422,7 +510,7 @@ async def ikb_cd_handler(callbeck: types.CallbackQuery):
             parse_mode="HTML")
     # если длина данных с кнопки ровна 3 символам(первый '-', второй '2')
     elif len(callbeck.data) == 5 and int(callbeck.data[3]) == 2:
-        if list_application1[20 + int(callbeck.data[4])] != 0:
+        if list_application1[20 + int(callbeck.data[4])] != 0 or list_application1[20 + int(callbeck.data[4])] >= 10:
             list_application1[20 + int(callbeck.data[4])] -= 10
         await callbeck.message.edit_text(
             text=f'<b>{list_name_brod_osnov[20 + int(callbeck.data[4])]}</b>',
@@ -432,7 +520,7 @@ async def ikb_cd_handler(callbeck: types.CallbackQuery):
 
     # если длина данных с кнопки ровна 3 символам(первый '-', второй '3')
     elif len(callbeck.data) == 5 and int(callbeck.data[3]) == 3:
-        if list_application1[30 + int(callbeck.data[4])] != 0:
+        if list_application1[30 + int(callbeck.data[4])] != 0 or list_application1[30 + int(callbeck.data[4])] >= 10:
             list_application1[30 + int(callbeck.data[4])] -= 10
         await callbeck.message.edit_text(
             text=f'<b>{list_name_brod_osnov[30 + int(callbeck.data[4])]}</b>',
@@ -1186,12 +1274,12 @@ async def add_wiring(message: types.Message, state: FSMContext):
 
     await FSMAdmin_Clients.next()
     await message.answer(f'Проверьте данные:\n'
-                         f'имя клиента: {data["name"]}\n'
-                         f'номер телефона: {data["Phone_number"]}\n'
-                         f'адрес: {data["Address"]}\n'
-                         f'название магазина : {data["Name_shop"]}\n'
-                         f'город: {data["Citi"]}\n'
-                         f'статус: {data["Wiring"]}'
+                         f'<em>имя клиента:</em> {data["name"]}\n'
+                         f'<em>номер телефона:</em> {data["Phone_number"]}\n'
+                         f'<em>адрес:</em> {data["Address"]}\n'
+                         f'<em>название магазина:</em> {data["Name_shop"]}\n'
+                         f'<em>город:</em> {data["Citi"]}\n'
+                         f'<em>статус:</em> {data["Wiring"]}'
                          f'\n'
                          f'Если всё верно нажмите "Подтвердить"')
 
@@ -1302,12 +1390,12 @@ async def change(callback: types.CallbackQuery):
 
     if callback.data == 'Вперед статус':
         await callback.message.answer(f'Проверьте данные:\n'
-                                      f'имя клиента: {CLIENTS["Name"]}\n'
-                                      f'номер телефона: {CLIENTS["Phone_number"]}\n'
-                                      f'адрес: {CLIENTS["Address"]}\n'
-                                      f'название магазина : {CLIENTS["Name_shop"]}\n'
-                                      f'город: {CLIENTS["Citi"]}\n'
-                                      f'статус: {CLIENTS["Wiring"]}'
+                                      f'<em>имя клиента:</em> {CLIENTS["Name"]}\n'
+                                      f'<em>номер телефона:</em> {CLIENTS["Phone_number"]}\n'
+                                      f'<em>адрес:</em> {CLIENTS["Address"]}\n'
+                                      f'<em>название магазина:</em> {CLIENTS["Name_shop"]}\n'
+                                      f'<em>город:</em> {CLIENTS["Citi"]}\n'
+                                      f'<em>статус:</em> {CLIENTS["Wiring"]}'
                                       f'\n'
                                       f'Если всё верно нажмите "Подтвердить"')
         await FSMAdmin_Clients_change.Confirmation.set()
@@ -1838,7 +1926,63 @@ async def finish(message: types.Message):
     # поместим все постоянные заявки в основную заявку
     bd.add_permanent_app()
 
-    await message.answer(text='Вы зашли в основное меню',
+    # ЯРОВОЕ
+
+    # зайдем в bd и поместим в список клиентов Яровских и выведим итог
+    list_app_jr_pr = bd.app_jr_pr(list_name_brod2_osnov)
+
+    # создаём принтер через модуль PrintList
+    app = QtWidgets.QApplication(sys.argv)
+    pl = PrintList.PrintList()
+
+    # добавляем строки из нашего списка заявок
+    pl.data = list_app_jr_pr
+
+    # програмируем ширину столбцов
+    pl.columnWidths = [50, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30,
+                       30, 30, 30, 30, 30, 30, 30, 30, 30]
+
+    # добавляем имена колонок
+    pl.headers = list_name_brod2_osnov_print
+
+    # запускаем поринтер
+    pl.printData()
+
+    # СЛАВГОРОД
+
+    # зайдем в bd и поместим в список клиентов Славгорода и выведим итог
+    list_app_sl = bd.app_sl(list_name_brod2_osnov)
+
+    # создаём принтер через модуль PrintList
+    app = QtWidgets.QApplication(sys.argv)
+    pl = PrintList.PrintList()
+    # # добавляем строки из нашешго списка заявок
+    pl.data = list_app_sl
+    # программируем ширину столбцов
+    pl.columnWidths = [50, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30,
+                       30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30]
+
+    # добавляем имена колонок
+    pl.headers = list_name_brod2_osnov_print
+    # запускаем принтер
+    pl.printData()
+
+    # создаём печатный документ для Галины Васильевны_____________________________________________________________
+    list_val_dop_app = bd.app_dop(list_name_brod2_dop)
+
+    # создаём принтер через модуль PrintList
+    app = QtWidgets.QApplication(sys.argv)
+    pl = PrintList.PrintList()
+    # # добавляем строки из нашешго списка заявок
+    pl.data = list_val_dop_app
+    # # програмируем ширину столбцов
+    pl.columnWidths = [50, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30]
+    # # добавляем имена колонок
+    pl.headers = list_name_brod2_dop_print
+    # запускаем поринтер
+    pl.printData()
+
+    await message.answer(text='Успешно',
                          reply_markup=keyboard.kb_menu_admin())
 
 
