@@ -10,7 +10,6 @@ from PyQt5 import QtWidgets
 # # машина состояний
 from aiogram.contrib.fsm_storage.memory import MemoryStorage
 
-#
 # # запускаем машину
 storage = MemoryStorage()
 
@@ -188,8 +187,6 @@ for brod in list_brod:
 # зайдем в bd  и вытызим список хлеба (нужна длина списка)
 list_application1 = [0] * len(bd.price_name())
 
-# list_aplication1 = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-#                     0, 0, 0, 0, 0, 0, 0]
 
 # списки хлеба для печати
 list_name_brod2_osnov = ['Батон_Сдобный',
@@ -473,7 +470,7 @@ async def ikb_cd_handler(callback: types.CallbackQuery):
         list_application1[20 + int(callback.data[4])] += 10
         await callback.message.edit_text(
             text=f'<b>{list_name_brod_osnov[20 + int(callback.data[4])]}</b>',
-            reply_markup=keyboard.get_iline_keyboard(20 + int(callback.data[2]),
+            reply_markup=keyboard.get_iline_keyboard(20 + int(callback.data[4]),
                                                      list_application1[20 + int(callback.data[4])]),
             parse_mode="HTML")  # пишем текст
     # если длина данных с кнопки ровна 3 символам(первый '+', второй '3')
@@ -536,9 +533,12 @@ async def reg_aplikations(message: types.Message):
     # получим имя клиента и его индекс из bd
     id_clients = bd.name_and_id_clients(message.from_user.id)[0]
     name_clients = bd.name_and_id_clients(message.from_user.id)[1]
+    citi_clients = bd.citi_wiring_clients(id_clients)[0]
+    wiring_clients = bd.citi_wiring_clients(id_clients)[1]
 
     # создадим таблицу для основной заявки если её ещё нет в bd
-    result_create_aplication = bd.create_request_table(id_clients, name_clients, list_application1)
+    result_create_aplication = bd.create_request_table(id_clients, name_clients, list_application1,
+                                                       citi_clients, wiring_clients)
     if result_create_aplication == True:
         await message.answer(text=f'Вы успешно зарегистрировали заявку для:\n{name_clients}',
                              reply_markup=keyboard.kb_menu())
@@ -821,9 +821,15 @@ async def add_application(message: types.Message):
 async def catch_id_clients(message: types.Message, state: FSMContext):
     async with state.proxy() as data:
         CLIENTS['id'] = int(message.text)
-
+    print(bd.citi_wiring_clients(CLIENTS['id']))
     # возьмем id и найдем по нему имя из bd
     CLIENTS['name_clients'] = bd.name_clients(CLIENTS['id'])
+    CLIENTS['citi'] = bd.citi_wiring_clients(CLIENTS['id'])[0]
+    CLIENTS['wiring'] = bd.citi_wiring_clients(CLIENTS['id'])[1]
+    print(CLIENTS['citi'])
+    print(CLIENTS['wiring'])
+
+
 
     # зпустим инлайн заявку
     ind_list1 = 0
@@ -850,13 +856,16 @@ async def reg_applikations(message: types.Message):
     # получим имя клиента и его индекс из bd
     id_clients = CLIENTS['id']
     name_clients = CLIENTS["name_clients"]
+    citi_clients = CLIENTS['citi']
+    wiring_clients = CLIENTS['wiring']
 
     # запишем только что полученные id и name в список для внесения мзменений в щаявку через бд
     for i in (id_clients, name_clients):
         id_and_name_clients2.append(i)
 
     # создадим таблицу для основной заявки если её ещё нет в bd
-    result_create_aplication = bd.create_request_table(id_clients, name_clients, list_application1)
+    result_create_aplication = bd.create_request_table(id_clients, name_clients, list_application1,
+                                                       citi_clients, wiring_clients)
     if result_create_aplication == True:
         await message.answer(text=f'Вы успешно зарегистрировали заявку для:\n{name_clients}',
                              reply_markup=keyboard.kb_menu_admin())
@@ -998,22 +1007,6 @@ async def catch_id_clients(message: types.Message, state: FSMContext):
                          reply_markup=keyboard.kb_menu_admin())
     await state.finish()
 
-
-#
-# # 'Заявки'- Удалить - ловим ID клиента, чтобы удалить его
-# @dp.message_handler(Text(contains='ud'))
-# async def get_days_of_week(message: types.Message):
-#     # возьмем id из нашего сообщения и найдем по нему имя из bd
-#     id_clients = message.text[2:len(message.text)]
-#     name_clients = bd.name_clients(id_clients)
-#
-#     # зайдем в bd и удалим запись по id
-#
-#     bd.del_applications(id_clients)
-#
-#     # выводим инлайн клавиатуру с днями недели
-#     await message.answer(text=f'Заявка для {name_clients} на завтра, успешно УДАЛЕНА!!!',
-#                          reply_markup=keyboard.kb_menu_admin())
 
 
 # menu 'ПОСТОЯННЫЕ ЗАЯВКИ'
@@ -1928,7 +1921,7 @@ async def finish(message: types.Message):
 
     # ЯРОВОЕ
 
-    # зайдем в bd и поместим в список клиентов Яровских и выведим итог
+    # зайдем в bd и поместим в список для печати клиентов Яровских и выведим итог
     list_app_jr_pr = bd.app_jr_pr(list_name_brod2_osnov)
 
     # создаём принтер через модуль PrintList
@@ -1954,13 +1947,13 @@ async def finish(message: types.Message):
     list_app_sl = bd.app_sl(list_name_brod2_osnov)
 
     # создаём принтер через модуль PrintList
-    app = QtWidgets.QApplication(sys.argv)
+    app2 = QtWidgets.QApplication(sys.argv)
     pl = PrintList.PrintList()
     # # добавляем строки из нашешго списка заявок
     pl.data = list_app_sl
     # программируем ширину столбцов
     pl.columnWidths = [50, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30,
-                       30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30]
+                       30, 30, 30, 30, 30, 30, 30, 30, 30]
 
     # добавляем имена колонок
     pl.headers = list_name_brod2_osnov_print
@@ -1970,13 +1963,14 @@ async def finish(message: types.Message):
     # создаём печатный документ для Галины Васильевны_____________________________________________________________
     list_val_dop_app = bd.app_dop(list_name_brod2_dop)
 
+    print(list_val_dop_app)
     # создаём принтер через модуль PrintList
-    app = QtWidgets.QApplication(sys.argv)
+    app3 = QtWidgets.QApplication(sys.argv)
     pl = PrintList.PrintList()
     # # добавляем строки из нашешго списка заявок
     pl.data = list_val_dop_app
     # # програмируем ширину столбцов
-    pl.columnWidths = [50, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30]
+    pl.columnWidths = [50, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30]
     # # добавляем имена колонок
     pl.headers = list_name_brod2_dop_print
     # запускаем поринтер

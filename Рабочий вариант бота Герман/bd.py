@@ -134,6 +134,19 @@ def id_and_name_all_clients():
     return data_clients
 
 
+# Функция вывода города и статуса клиента
+def citi_wiring_clients(id_clients):
+    conn = sq.connect('Works.db')
+    cur = conn.cursor()
+    cur.execute(f'''select Город, Проводка from Clients where ClientsID == {id_clients} ''')
+    data_clients = []
+    for i in cur.fetchall():
+        for ii in i:
+            data_clients.append(ii)
+    conn.close()
+    return data_clients
+
+
 # функция просмотрзаявки на наличие
 def applications_true_falshe(name_clients):
     # получаем имя таблицы "сегодняшнюю дату"
@@ -162,7 +175,7 @@ def applications_true_falshe(name_clients):
 
 
 # создадим таблицу для основной заявки если её ещё нет и запишем в нее заявку клиента
-def create_request_table(id_clients, name_clients, list_aplication1):
+def create_request_table(id_clients, name_clients, list_aplication1, citi_clients, wiring_clients):
     # получаем имя таблицы "сегодняшнюю дату"
     date_today = datetime.datetime.today()
     # получаем завтрашнюю дату
@@ -179,6 +192,8 @@ def create_request_table(id_clients, name_clients, list_aplication1):
         cur.execute(f'''CREATE TABLE IF NOT EXISTS {name_table_application}(
                                                                         ClientsID INTEGER PRIMARY KEY NOT NULL,
                                                                         Name_Clients text,
+                                                                        Город text,
+                                                                        Проводка text,
                                                                         Батон_Сдобный integer,
                                                                         Батон_Французский integer,
                                                                         Хлеб_Богатырский_отрубной integer,
@@ -239,13 +254,14 @@ def create_request_table(id_clients, name_clients, list_aplication1):
         return False
 
     else:
-        print('не в списке')
         # открываем базу данных и записываем данные из списка заявок в таблицу заявок
         conn = sq.connect('Works.db')
         cur = conn.cursor()
         cur.execute(f'''insert into {name_table_application} (
-                                                                                               ClientsID,
+                                                                                           ClientsID,
                                                                                            Name_Clients,
+                                                                                           Город,
+                                                                                           Проводка,
                                                                                            Батон_Сдобный,
                                                                                            Батон_Французский,
                                                                                            Хлеб_Богатырский_отрубной,
@@ -275,9 +291,9 @@ def create_request_table(id_clients, name_clients, list_aplication1):
                                                                                            Тесто_Пирожковое_охлажденное,
                                                                                            Пряники,
                                                                                            Ватрушка_с_творогом,
-                                                                                                Ватрушка_с_сыром,
-                                                                                                Ватрушка_с_конфитюром,
-                                                                                               Беляш_печеный,
+                                                                                           Ватрушка_с_сыром,
+                                                                                           Ватрушка_с_конфитюром,
+                                                                                           Беляш_печеный,
                                                                                                Кекс_классический,
                                                                                                Кекс_шоколадный,
                                                                                                Кулебяка,
@@ -287,8 +303,9 @@ def create_request_table(id_clients, name_clients, list_aplication1):
                                                                                                Ромовая_баба,
                                                                                                Сосиска_в_тесте
                                                                                            )
-                                values(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)''',
-                    (int(id_clients), name_clients, list_aplication1[0], list_aplication1[1], list_aplication1[2]
+                     values(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)''',
+                    (int(id_clients), name_clients, citi_clients, wiring_clients, list_aplication1[0],
+                     list_aplication1[1], list_aplication1[2]
                      , list_aplication1[3], list_aplication1[4], list_aplication1[5], list_aplication1[6]
                      , list_aplication1[7], list_aplication1[8], list_aplication1[9], list_aplication1[10]
                      , list_aplication1[11], list_aplication1[12], list_aplication1[13], list_aplication1[14]
@@ -395,6 +412,10 @@ def old_aplication(name_clients):
         for val in i:
             list_old_aplication.append(val)
     # удалим из списка индекс и имя клиента
+    del list_old_aplication[0]
+    # имя переместилось на 1 место поэтому-[0]
+    del list_old_aplication[0]
+    # удалим из списка город и статус клиента
     del list_old_aplication[0]
     # имя переместилось на 1 место поэтому-[0]
     del list_old_aplication[0]
@@ -775,17 +796,23 @@ def add_permanent_app():
     # для этого запишем в список id клиентов из таблицы заявок
     conn = sq.connect('Works.db')
     cur = conn.cursor()
-    cur.execute(f'''select ClientsID from {name_table_application}''')
+    cur.execute(f'''select ClientsID, Город, Проводка from {name_table_application}''')
     id_client = []
     for i in cur.fetchall():
         for c in i:
             id_client.append(c)
     # если в нашем списке нет клиента с таким id, то внесем его в таблицу заявок
     for list_application in x:
+        # узнаем город и статус клиента
+        citi_clients = citi_wiring_clients(list_application[0])[0]
+        wiring_clients = citi_wiring_clients(list_application[0])[1]
+        # если этот клиент еще не сделал на сегодня заявку, то запишем её
         if list_application[0] not in id_client:
             cur.execute(f'''insert into {name_table_application} (
                                                                        ClientsID,
                                                                        Name_Clients,
+                                                                       Город,
+                                                                       Проводка,
                                                                        Батон_Сдобный,
                                                                        Батон_Французский,
                                                                        Хлеб_Богатырский_отрубной,
@@ -826,8 +853,8 @@ def add_permanent_app():
                        Пицца_мини,
                        Ромовая_баба,
                        Сосиска_в_тесте)
-            values(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)''',
-                        (list_application[0], list_application[1], list_application[2]
+            values(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)''',
+                        (list_application[0], list_application[1], citi_clients, wiring_clients, list_application[2]
                          , list_application[3], list_application[4], list_application[5], list_application[6]
                          , list_application[7], list_application[8], list_application[9], list_application[10]
                          , list_application[11], list_application[12], list_application[13], list_application[14]
@@ -840,6 +867,7 @@ def add_permanent_app():
                          , list_application[39], list_application[40], list_application[41]))
 
             conn.commit()
+    conn.close()
 
 
 # зайдем в bd и поместим в список клиентов Яровских проводных
@@ -850,14 +878,14 @@ def app_jr_pr(list_name_brod2_osnov):
     date_tomorrow = date_today + datetime.timedelta(days=1)
     # создаём переменную с завтрешней датой в удобном формате
     name_table_application = date_tomorrow.strftime('day_%d_%m_%y')
-
     list_val = []
     conn = None
     try:
 
         conn = sq.connect('Works.db')
         cur = conn.cursor()
-        cur.execute(f'''select Name_Clients, Батон_Сдобный,
+        cur.execute(f'''select Name_Clients,
+                                  Батон_Сдобный,
                                   Батон_Французский,
                                   Хлеб_Богатырский_отрубной,
                                   Хлеб_Богатырский_отрубной_круглый,
@@ -885,18 +913,21 @@ def app_jr_pr(list_name_brod2_osnov):
                                   Рулет_с_маком,
                                   Тесто_Пирожковое_охлажденное,
                                   Пряники
-                                   from {name_table_application} where Город == Яровое  or Проводка == п''')
+                                   from {name_table_application} where Город == ? and Проводка == ?''',
+                    ('Яровое', 'п'))
         list_val1 = cur.fetchall()
 
         for val in list_val1:
             list_val.append(list(val))
 
-        # теперь подсчитаем итог и по столбцам для проводных яровских клиентов  и запишим в наш список(list_val)
+        # теперь подсчитаем итог и по столбцам для проводных яровских клиентов и запишим в наш список(list_val)
         list_sum_clients1_1 = ['итого']
         list_sum_clients1_1_dable = []
         # с помощью цикла пройдемся по столбцам, подсчитаем их суммы и запишим их в список(list_sum_clients1_1)
         for brod in list_name_brod2_osnov:
-            cur.execute(f'''select sum ({brod}) from {name_table_application} where Город == Яровое or Проводка == п''')
+            cur.execute(
+                f'''select sum ({brod}) from {name_table_application} where Город == ? and Проводка == ?''',
+                ('Яровое', 'п'))
             list_sum_clients1_1_dable.append(cur.fetchone())
         for i in list_sum_clients1_1_dable:
             for c in i:
@@ -933,7 +964,8 @@ def app_jr_pr(list_name_brod2_osnov):
                                              Рулет_с_маком,
                                              Тесто_Пирожковое_охлажденное,
                                              Пряники
-                                              from {name_table_application} where Город == Яровое or Проводка == н''')
+                                              from {name_table_application} where Город == ? and Проводка == ?''',
+                    ('Яровое', 'н'))
         list_val1 = cur.fetchall()
         for val in list_val1:
             list_val.append(list(val))
@@ -943,7 +975,8 @@ def app_jr_pr(list_name_brod2_osnov):
         list_sum_clients1_2_dable = []
         # с помощью цикла пройдемся по столбцам, подсчитаем их суммы и запишим их в список(list_sum_clients1_1)
         for brod in list_name_brod2_osnov:
-            cur.execute(f'''select sum ({brod}) from {name_table_application} where Город == Яровое''')
+            cur.execute(f'''select sum ({brod}) from {name_table_application} where Город == ?''',
+                        ('Яровое',))
             list_sum_clients1_2_dable.append(cur.fetchone())
         for i in list_sum_clients1_2_dable:
             for c in i:
@@ -1006,7 +1039,8 @@ def app_sl(list_name_brod2_osnov):
                                              Рулет_с_маком,
                                              Тесто_Пирожковое_охлажденное,
                                              Пряники
-                                              from {name_table_application} where Город == Славгород or Проводка == п''')
+                                              from {name_table_application} where Город == ? and Проводка == ?''',
+                    ('Славгород', 'п'))
         list_val1 = cur.fetchall()
         for val in list_val1:
             list_val_slav.append(list(val))
@@ -1017,7 +1051,8 @@ def app_sl(list_name_brod2_osnov):
         # с помощью цикла пройдемся по столбцам, подсчитаем их суммы и запишим их в список(list_sum_clients2_1)
         for brod in list_name_brod2_osnov:
             cur.execute(f'''select sum ({brod}) from {name_table_application}
-                                                where Город == Славгород or Проводка == п''')
+                                                where Город == ? and Проводка == ?''',
+                    ('Славгород', 'п'))
             list_sum_clients2_1_dable.append(cur.fetchone())
         for i in list_sum_clients2_1_dable:
             for c in i:
@@ -1055,7 +1090,8 @@ def app_sl(list_name_brod2_osnov):
                                                         Тесто_Пирожковое_охлажденное,
                                                         Пряники
                                                          from {name_table_application} 
-                                                         where Город == Славгород or Проводка == н''')
+                                                         where Город == ? and Проводка == ?''',
+                    ('Славгород', 'н'))
         list_val1 = cur.fetchall()
         for val in list_val1:
             list_val_slav.append(list(val))
