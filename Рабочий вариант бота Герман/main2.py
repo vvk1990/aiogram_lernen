@@ -187,7 +187,6 @@ for brod in list_brod:
 # зайдем в bd  и вытызим список хлеба (нужна длина списка)
 list_application1 = [0] * len(bd.price_name())
 
-
 # списки хлеба для печати
 list_name_brod2_osnov = ['Батон_Сдобный',
                          'Батон_Французский',
@@ -573,14 +572,18 @@ async def basket(message: types.Message):
     for i in list_application1:
         if i > 0:
             await message.answer(
-                text=f'{list_name_brod_osnov[ind]} - {i}шт * {list_prise[ind]} = {i * list_prise[ind]} рублей')
+                text=f'<em>{list_name_brod_osnov[ind]}</em> - {i} * {list_prise[ind]} = <b>{i * list_prise[ind]}</b>'
+                     f' рублей',
+                parse_mode="HTML")
             list_summ_aplication.append(i * list_prise[ind])
         ind += 1
     summ = 0
     for i in list_summ_aplication:
         summ += i
-    await message.answer(text=f'Итого {summ}')
-    await message.answer(text=f'Если всё верно нажмите "Подтвердить"')
+    await message.answer(text=f'<em>Итого</em> - <b>{summ}</b> рублей.',
+                         parse_mode="HTML")
+    await message.answer(text=f'Если всё верно нажмите <b>"Подтвердить"</b>👇',
+                         parse_mode="HTML")
 
 
 #  Да, Нет, посмотреть старую заявку - на вопрос'перезаписать заявку'
@@ -829,8 +832,6 @@ async def catch_id_clients(message: types.Message, state: FSMContext):
     print(CLIENTS['citi'])
     print(CLIENTS['wiring'])
 
-
-
     # зпустим инлайн заявку
     ind_list1 = 0
     ind_list2 = 0
@@ -961,13 +962,19 @@ async def basket(message: types.Message):
     for i in list_application1:
         if i > 0:
             await message.answer(
-                text=f'{list_name_brod_osnov[ind]} - {i}шт * {list_prise[ind]} = {i * list_prise[ind]} рублей')
+                text=f'<em>{list_name_brod_osnov[ind]}</em> - <b>{i}</b> * <b>{list_prise[ind]}</b> = '
+                     f'<b>{i * list_prise[ind]}</b> рублей',
+                parse_mode="HTML"
+            )
             list_summ_aplication.append(i * list_prise[ind])
         ind += 1
     summ = 0
     for i in list_summ_aplication:
         summ += i
-    await message.answer(text=f'Итого {summ}')
+    await message.answer(text=f'<em>Итого</em> - <b>{summ}</b> рублей',
+                         parse_mode="HTML")
+    await message.answer(text=f'Если всё верно нажмите <b>"Подтвердить"</b>👇',
+                         parse_mode="HTML")
 
 
 # 'Заявки' - удалить
@@ -1006,7 +1013,6 @@ async def catch_id_clients(message: types.Message, state: FSMContext):
     await message.answer(text=f'Заявка для {CLIENTS["name_clients"]} на завтра, успешно УДАЛЕНА!!!',
                          reply_markup=keyboard.kb_menu_admin())
     await state.finish()
-
 
 
 # menu 'ПОСТОЯННЫЕ ЗАЯВКИ'
@@ -2023,13 +2029,13 @@ async def start_command(message: types.Message):
                                text='Необходимо зарегистрироваться',  # пишем этот текст
                                reply_markup=keyboard.kb_reg())  # запускаем клавиатуру
         await message.delete()
-
-    # если вы админ откроем админское меню
-    elif message.from_user.id == ADMIN:
-        await bot.send_message(chat_id=message.from_user.id,  # отписываемся в личный чат
-                               text='Привет Наташа',  # пишем этот текст
-                               reply_markup=keyboard.kb_menu_admin())  # запускаем клавиатуру
-        await message.delete()
+    #
+    # # если вы админ откроем админское меню
+    # elif message.from_user.id == ADMIN:
+    #     await bot.send_message(chat_id=message.from_user.id,  # отписываемся в личный чат
+    #                            text='Привет Наташа',  # пишем этот текст
+    #                            reply_markup=keyboard.kb_menu_admin())  # запускаем клавиатуру
+    #     await message.delete()
 
     # если клиент зарегистрирован, то откроем клавиатуру клиентская
     else:

@@ -23,7 +23,8 @@ def kb_reg():
 
 # ГЛАВНОЕ МЕНЮ
 def kb_menu():
-    kb = ReplyKeyboardMarkup(resize_keyboard=True)
+    kb = ReplyKeyboardMarkup(resize_keyboard=True)#resize_keyboard=True,
+                             #row_width=5,
     # )# создали клавиатуру,
     # вписывающейся в интерфейс(resize_keyboard=True),
     # и самозакрывается (one_time_keyboard=True)
