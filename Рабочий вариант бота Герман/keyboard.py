@@ -239,29 +239,6 @@ def kb_menu_brod_admin():
     return kb
 
 
-# # инлайн клавиатура для изменения данных хлеба
-# def get_inline_keyboard_brod_change(list_brod_change):
-#     ikb = InlineKeyboardMarkup(row_width=3,
-#                                inline_keyboard=[
-#                                    [InlineKeyboardButton('Имя:', callback_data=f'q'),
-#                                     InlineKeyboardButton(f'{list_brod_change[1]}', callback_data=f'q'),
-#                                     InlineKeyboardButton(f'Изменить имя', callback_data=f'Изменить имя')],
-#
-#                                    [InlineKeyboardButton('Вес:', callback_data=f'q'),
-#                                     InlineKeyboardButton(f'{list_brod_change[2]}', callback_data=f'q'),
-#                                     InlineKeyboardButton(f'Изменить вес', callback_data=f'Изменить вес')],
-#
-#                                    [InlineKeyboardButton('Цена Яровое:', callback_data=f'q'),
-#                                     InlineKeyboardButton(f'{list_brod_change[3]}', callback_data=f'q'),
-#                                     InlineKeyboardButton(f'Изменить цену', callback_data=f'Изменить цену Яровое')]
-#                                    ,
-#                                    [InlineKeyboardButton('Цена Славгород:', callback_data=f'q'),
-#                                     InlineKeyboardButton(f'{list_brod_change[4]}', callback_data=f'q'),
-#                                     InlineKeyboardButton(f'Изменить цену', callback_data=f'Изменить цену Славгород')],
-#                                ])
-#
-#     return ikb
-
 
 # инлайн клавиатура для изменения данных хлеба
 def get_inline_keyboard_brod_change(name, heft, price_jr, price_sl):

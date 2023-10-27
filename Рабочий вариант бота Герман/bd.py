@@ -1172,3 +1172,27 @@ def app_dop(list_name_brod2_dop):
             conn.close()
 
     return list_val_dop
+
+
+# скачиваем формулы и помешаем в список
+def formula_brod():
+    formula = []
+    # подключимся к базе данных и соберем информацию и записываем её наш список,
+    # но сначала считаем клиентов Славгорода проводных
+    conn = None
+    try:
+
+        conn = sq.connect('Works.db')
+        cur = conn.cursor()
+        cur.execute('''select * from formula ''')
+        list_val1 = cur.fetchall()
+        for val in list_val1:
+            formula.append(list(val))
+
+    except sq.Error as err:
+        print('Ошибка бызы данных', err)
+    finally:
+        if conn is not None:
+            conn.close()
+
+    return formula

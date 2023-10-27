@@ -1945,7 +1945,7 @@ async def finish(message: types.Message):
     pl.headers = list_name_brod2_osnov_print
 
     # запускаем поринтер
-    pl.printData()
+    # pl.printData()
 
     # СЛАВГОРОД
 
@@ -1964,26 +1964,104 @@ async def finish(message: types.Message):
     # добавляем имена колонок
     pl.headers = list_name_brod2_osnov_print
     # запускаем принтер
-    pl.printData()
+    # pl.printData()
 
     # создаём печатный документ для Галины Васильевны_____________________________________________________________
     list_val_dop_app = bd.app_dop(list_name_brod2_dop)
 
-    print(list_val_dop_app)
     # создаём принтер через модуль PrintList
     app3 = QtWidgets.QApplication(sys.argv)
     pl = PrintList.PrintList()
     # # добавляем строки из нашешго списка заявок
     pl.data = list_val_dop_app
-    # # програмируем ширину столбцов
+    # # программируем ширину столбцов
     pl.columnWidths = [50, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30]
     # # добавляем имена колонок
     pl.headers = list_name_brod2_dop_print
     # запускаем поринтер
+    # pl.printData()
+
+    await message.answer(text='Успешно!',
+                         reply_markup=keyboard.kb_menu_admin())
+    # распечатываем лист с рецептурой
+
+    # создадим список ингридментов для шапки
+    ingredient = ['имя', 'шт', 'заквс', 'в/с', '1/с', 'рж', 'дрожжи', 'соль', 'вода', ' сахар', 'жир', 'масло',
+                  'отруб',
+                  'ун+', 'ул.зел', 'ул.гам', 'ул.син', 'ул.краф', 'яйцо', 'маргарин', 'ванилин', 'белок',
+                  'чиабат', 'дарк', 'веги', 'овсян', 'сух.мол', 'амоний', 'кефир', 'солод', 'глофа', 'изюм',
+                  'кореан', 'тмин']
+
+    # возьмем итоговое количество хлеба из списка славгорода(list_app_sl)
+    result = []
+    for i in list_app_sl[-1]:
+        result.append(i)
+
+    # зайдем в бд и возьмем от туда формулы
+    formula = bd.formula_brod()
+
+    # пройдемсЯ по списку с формулами и перемножим ингридиенты на колличество хлеба
+    count = 0
+    count2 = 1
+    index_list = 0
+    index_list_formula = 1
+    new_list_result2 = []
+    for list in formula:
+        new_list_result2.append([])
+
+        for i in list:
+            # добавим имя хлеба на первое место
+            if count == 0:
+                new_list_result2[index_list].append(i)
+                count += 1
+            # добавим количество хлеба на второе место
+            if count == 1:
+                new_list_result2[index_list].append(result[index_list_formula])
+                count += 1
+
+            # добавим количество ингредиента деленное на 100 и умноженное на колл. хлеба
+            else:
+                # если ингредиент не используется, пишем - '-'
+                if i == 0:
+                    new_list_result2[index_list].append('-')
+
+                # если ингредиент используется, пишем количество ингредиента деленное на 100 и умноженное на колл. хлеба
+                else:
+                    new_list_result2[index_list].append(f'{(int(i) / 100 * result[count2]):.1f}')
+
+        count -= 2
+        index_list += 1
+        count2 += 1
+        index_list_formula += 1
+
+    # создаём принтер через модуль PrintList
+    app4 = QtWidgets.QApplication(sys.argv)
+    pl = PrintList.PrintList()
+    # # добавляем строки из нашешго списка заявок
+    pl.data = new_list_result2
+    # программируем ширину столбцов
+    # pl.columnWidths = [40, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
+    #                    10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10]
+    pl.columnWidths = [40, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25,
+                       25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25]
+    # добавляем имена колонок
+    pl.headers = ingredient
+    # запускаем принтер
     pl.printData()
 
-    await message.answer(text='Успешно',
-                         reply_markup=keyboard.kb_menu_admin())
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 ########################################################################################################################
@@ -2031,11 +2109,11 @@ async def start_command(message: types.Message):
         await message.delete()
     #
     # # если вы админ откроем админское меню
-    # elif message.from_user.id == ADMIN:
-    #     await bot.send_message(chat_id=message.from_user.id,  # отписываемся в личный чат
-    #                            text='Привет Наташа',  # пишем этот текст
-    #                            reply_markup=keyboard.kb_menu_admin())  # запускаем клавиатуру
-    #     await message.delete()
+    elif message.from_user.id == ADMIN:
+        await bot.send_message(chat_id=message.from_user.id,  # отписываемся в личный чат
+                               text='Привет Наташа',  # пишем этот текст
+                               reply_markup=keyboard.kb_menu_admin())  # запускаем клавиатуру
+        await message.delete()
 
     # если клиент зарегистрирован, то откроем клавиатуру клиентская
     else:
